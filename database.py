@@ -13,7 +13,7 @@ def init_connection() -> psycopg2.extensions.connection:
 
 # Perform query.
 # Uses st.cache_data to only rerun when the query changes or after 10 min.
-@st.cache_data(ttl=600)
+#@st.cache_data(ttl=600)
 def run_query_list(_conn: psycopg2.extensions.connection, query: str) -> list:
     with _conn.cursor() as cur:
         cur.execute(query)
@@ -22,6 +22,6 @@ def run_query_list(_conn: psycopg2.extensions.connection, query: str) -> list:
 
 # Perform query.
 # Uses st.cache_data to only rerun when the query changes or after 10 min.
-@st.cache_data(ttl=600)
+# @st.cache_data(ttl=600)
 def run_query_pandas(_conn: psycopg2.extensions.connection, query: str) -> pd.DataFrame:
     return sqlio.read_sql_query(query, _conn)
