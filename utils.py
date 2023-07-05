@@ -4,6 +4,25 @@ import pandas.io.sql as sqlio
 import pandas as pd
 
 
+asset_types: tuple = (
+    "Cash",
+    "Saving Account",
+    "Checking Account",
+    "Investment",
+    "Real Estate",
+    "Vehicle",
+    "Other",
+)
+
+currencies: tuple = ("USD", "COP")
+
+categories = {
+    "income": ("wage", "gift"),
+    "housing": ("rent", "internet"),
+    "vehicle": ("fuel", "parking"),
+}
+
+
 # Initialize connection.
 # Uses st.cache_resource to only run once.
 @st.cache_resource
@@ -13,10 +32,11 @@ def init_connection() -> psycopg2.extensions.connection:
 
 # Perform query.
 # Uses st.cache_data to only rerun when the query changes or after 10 min.
-#@st.cache_data(ttl=600)
+# @st.cache_data(ttl=600)
 def run_query_list(_conn: psycopg2.extensions.connection, query: str) -> list:
     with _conn.cursor() as cur:
         cur.execute(query)
+        _conn.commit()
         return cur.fetchall()
 
 

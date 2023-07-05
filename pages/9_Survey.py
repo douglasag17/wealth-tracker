@@ -1,7 +1,7 @@
 import streamlit as st
 import psycopg2
 import pandas as pd
-from database import init_connection, run_query_list, run_query_pandas
+from utils import init_connection, run_query_list, run_query_pandas
 
 
 if __name__ == "__main__":
