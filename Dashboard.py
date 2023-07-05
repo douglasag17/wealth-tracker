@@ -48,6 +48,8 @@ def main():
 
     st.header("📊 Upcoming Transactions")
 
+    st.header("📊 Budget Summary")
+
 
 if __name__ == "__main__":
     main()

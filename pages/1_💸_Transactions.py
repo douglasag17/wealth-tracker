@@ -2,12 +2,7 @@ import streamlit as st
 import psycopg2
 import pandas as pd
 from datetime import date
-from utils import (
-    init_connection,
-    run_query_list,
-    run_query_pandas,
-    categories
-)
+from utils import init_connection, run_query_list, run_query_pandas, categories
 
 
 # TODO: Put this in a utils file
@@ -26,7 +21,9 @@ def set_up_page():
 def create_transaction(conn):
     col1, col2 = st.columns(2)
 
-    assets_list: list = run_query_list(_conn=conn, query="SELECT ID, NAME FROM WEALTH_TRACKER.ASSET ORDER BY NAME DESC")
+    assets_list: list = run_query_list(
+        _conn=conn, query="SELECT ID, NAME FROM WEALTH_TRACKER.ASSET ORDER BY NAME DESC"
+    )
     asset_liability: str = col1.selectbox("Pick an asset/liability", assets_list)
     transaction_date: str = col2.date_input("Transaction date:")
     amount = col1.number_input("Amount (negative if it is an expense)")
@@ -96,18 +93,19 @@ def main():
             hide_index=True,
             column_config={
                 "name": "Name",
-                "category": st.column_config.SelectboxColumn("Category", options=categories.keys()),
+                "category": st.column_config.SelectboxColumn(
+                    "Category", options=categories.keys()
+                ),
                 "created_at": "Created at",
                 "updated_at": "Last updated at",
             },
-            key='edited_df'
+            key="edited_df",
         )
         submitted = st.form_submit_button("Update transactions")
     if submitted:
         # TODO: Update, delete, add transactions
         st.write("Edited dataframe:", edited_df)
-        st.write(st.session_state['edited_df'])
-
+        st.write(st.session_state["edited_df"])
 
 
 if __name__ == "__main__":

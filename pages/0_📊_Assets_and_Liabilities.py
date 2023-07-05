@@ -21,7 +21,6 @@ def set_up_page():
         initial_sidebar_state="expanded",
     )
     st.title("Assets and Liabilities")
-    st.write("These are your assets and liabilities ...")
 
 
 def create_asset(conn):
@@ -118,7 +117,6 @@ def main():
     # List assets
     st.header("📈 Assets")
     list_assets(conn=conn)
-
 
     # TODO: Use a table instead of a single form
     # assets_query = "SELECT NAME, TYPE, INFORMATION, CURRENCY, BALANCE, IS_ACTIVE, CREATED_AT, UPDATED_AT FROM WEALTH_TRACKER.ASSET"
