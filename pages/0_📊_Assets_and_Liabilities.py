@@ -7,6 +7,7 @@ from utils import (
     run_query_pandas,
     asset_types,
     currencies,
+    login,
 )
 
 
@@ -109,39 +110,43 @@ def main():
     # Connect to database
     conn: psycopg2.extensions.connection = init_connection()
 
-    # Create an asset or a liability
-    with st.form("form"):
-        st.subheader("Create a new asset 👇")
-        create_asset(conn=conn)
+    if login():
+        # Create an asset or a liability
+        with st.form("form"):
+            st.subheader("Create a new asset 👇")
+            create_asset(conn=conn)
 
-    # List assets
-    st.header("📈 Assets")
-    list_assets(conn=conn)
+        # List assets
+        st.header("📈 Assets")
+        list_assets(conn=conn)
 
-    # TODO: Use a table instead of a single form
-    # assets_query = "SELECT NAME, TYPE, INFORMATION, CURRENCY, BALANCE, IS_ACTIVE, CREATED_AT, UPDATED_AT FROM WEALTH_TRACKER.ASSET"
-    # df: pd.DataFrame = run_query_pandas(_conn=conn, query=assets_query)
-    # edited_df: pd.DataFrame = st.data_editor(
-    #     df,
-    #     column_config={
-    #         "name": "Name",
-    #         "type": st.column_config.SelectboxColumn("Type", options=asset_types),
-    #         "information": "Information",
-    #         "currency": st.column_config.SelectboxColumn(
-    #             "Currency", options=currencies
-    #         ),
-    #         "balance": "Balance",
-    #         "is_active": "Is it active?",
-    #         "created_at": "Created at",
-    #         "updated_at": "Last updated at",
-    #     },
-    #     disabled=["balance", "created_at", "updated_at"],
-    #     hide_index=True,
-    #     num_rows="dynamic"
-    # )
+        # TODO: Use a table instead of a single form
+        # assets_query = "SELECT NAME, TYPE, INFORMATION, CURRENCY, BALANCE, IS_ACTIVE, CREATED_AT, UPDATED_AT FROM WEALTH_TRACKER.ASSET"
+        # df: pd.DataFrame = run_query_pandas(_conn=conn, query=assets_query)
+        # edited_df: pd.DataFrame = st.data_editor(
+        #     df,
+        #     column_config={
+        #         "name": "Name",
+        #         "type": st.column_config.SelectboxColumn("Type", options=asset_types),
+        #         "information": "Information",
+        #         "currency": st.column_config.SelectboxColumn(
+        #             "Currency", options=currencies
+        #         ),
+        #         "balance": "Balance",
+        #         "is_active": "Is it active?",
+        #         "created_at": "Created at",
+        #         "updated_at": "Last updated at",
+        #     },
+        #     disabled=["balance", "created_at", "updated_at"],
+        #     hide_index=True,
+        #     num_rows="dynamic"
+        # )
 
-    # List liabilities
-    st.header("📈 Liabilities")
+        # List liabilities
+        st.header("📈 Liabilities")
+
+    else:
+        st.warning("Please enter your username and password")
 
 
 if __name__ == "__main__":

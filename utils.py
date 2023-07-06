@@ -2,6 +2,9 @@ import streamlit as st
 import psycopg2
 import pandas.io.sql as sqlio
 import pandas as pd
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
 
 
 asset_types: tuple = (
@@ -45,3 +48,28 @@ def run_query_list(_conn: psycopg2.extensions.connection, query: str) -> list:
 # @st.cache_data(ttl=600)
 def run_query_pandas(_conn: psycopg2.extensions.connection, query: str) -> pd.DataFrame:
     return sqlio.read_sql_query(query, _conn)
+
+
+def login() -> bool:
+    # Log In Page
+    with open("config.yaml") as file:
+        config = yaml.load(file, Loader=SafeLoader)
+
+    authenticator = stauth.Authenticate(
+        config["credentials"],
+        config["cookie"]["name"],
+        config["cookie"]["key"],
+        config["cookie"]["expiry_days"],
+        config["preauthorized"],
+    )
+    name, authentication_status, username = authenticator.login("Login", "sidebar")
+    if st.session_state["authentication_status"]:
+        authenticator.logout("Logout", "sidebar")
+        # st.sidebar.write(f"Welcome *{name}*")
+        return True
+    elif st.session_state["authentication_status"] is None:
+        st.sidebar.warning("Please enter your username and password")
+        return False
+    elif not st.session_state["authentication_status"]:
+        st.sidebar.error("Username/password is incorrect")
+        return False

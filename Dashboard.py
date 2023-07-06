@@ -2,7 +2,7 @@ import streamlit as st
 import psycopg2
 import pandas as pd
 import numpy as np
-from utils import init_connection, run_query_list
+from utils import init_connection, run_query_list, login
 
 
 # TODO: Put this in a utils file
@@ -16,15 +16,10 @@ def set_up_page():
         initial_sidebar_state="expanded",
     )
     st.title(f"{page_icon} {page_title}")
+
+
+def show_dashboard(conn):
     st.write("This is a summary of your networth ...")
-
-
-def main():
-    set_up_page()
-
-    # Connect to database
-    conn: psycopg2.extensions.connection = init_connection()
-
     st.header("💰 Total Net Worth")
     total_net_worth_query = "SELECT SUM(BALANCE) FROM WEALTH_TRACKER.ASSET"
     total_net_worth: str = run_query_list(_conn=conn, query=total_net_worth_query)[0][0]
@@ -49,6 +44,19 @@ def main():
     st.header("📊 Upcoming Transactions")
 
     st.header("📊 Budget Summary")
+
+
+def main():
+    set_up_page()
+
+    # Connect to database
+    conn: psycopg2.extensions.connection = init_connection()
+
+    if login():
+        # Show dashboard
+        show_dashboard(conn)
+    else:
+        st.warning("Please enter your username and password")
 
 
 if __name__ == "__main__":

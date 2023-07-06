@@ -2,7 +2,7 @@ import streamlit as st
 import psycopg2
 import pandas as pd
 from datetime import date
-from utils import init_connection, run_query_list, run_query_pandas, categories
+from utils import init_connection, run_query_list, run_query_pandas, categories, login
 
 
 # TODO: Put this in a utils file
@@ -72,40 +72,43 @@ def main():
     # Connect to database
     conn: psycopg2.extensions.connection = init_connection()
 
-    # Create a transaction
-    with st.form("form"):
-        st.subheader("Create a new transaction 👇")
-        create_transaction(conn=conn)
+    if login():
+        # Create a transaction
+        with st.form("form"):
+            st.subheader("Create a new transaction 👇")
+            create_transaction(conn=conn)
 
-    # List transactions
-    st.subheader("Latest transactions 🤓")
-    transactions_query = """
-        SELECT *
-        FROM WEALTH_TRACKER.TRANSACTION 
-        ORDER BY DATE DESC
-        """
-    df: pd.DataFrame = run_query_pandas(_conn=conn, query=transactions_query)
-    with st.form("form_edit_transactions"):
-        edited_df = st.data_editor(
-            df,
-            num_rows="dynamic",
-            disabled=["created_at", "updated_at"],
-            hide_index=True,
-            column_config={
-                "name": "Name",
-                "category": st.column_config.SelectboxColumn(
-                    "Category", options=categories.keys()
-                ),
-                "created_at": "Created at",
-                "updated_at": "Last updated at",
-            },
-            key="edited_df",
-        )
-        submitted = st.form_submit_button("Update transactions")
-    if submitted:
-        # TODO: Update, delete, add transactions
-        st.write("Edited dataframe:", edited_df)
-        st.write(st.session_state["edited_df"])
+        # List transactions
+        st.subheader("Latest transactions 🤓")
+        transactions_query = """
+            SELECT *
+            FROM WEALTH_TRACKER.TRANSACTION 
+            ORDER BY DATE DESC
+            """
+        df: pd.DataFrame = run_query_pandas(_conn=conn, query=transactions_query)
+        with st.form("form_edit_transactions"):
+            edited_df = st.data_editor(
+                df,
+                num_rows="dynamic",
+                disabled=["created_at", "updated_at"],
+                hide_index=True,
+                column_config={
+                    "name": "Name",
+                    "category": st.column_config.SelectboxColumn(
+                        "Category", options=categories.keys()
+                    ),
+                    "created_at": "Created at",
+                    "updated_at": "Last updated at",
+                },
+                key="edited_df",
+            )
+            submitted = st.form_submit_button("Update transactions")
+        if submitted:
+            # TODO: Update, delete, add transactions
+            st.write("Edited dataframe:", edited_df)
+            st.write(st.session_state["edited_df"])
+        else:
+            st.warning("Please enter your username and password")
 
 
 if __name__ == "__main__":
