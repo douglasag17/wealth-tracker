@@ -19,11 +19,14 @@ asset_types: tuple = (
 
 currencies: tuple = ("USD", "COP")
 
-categories = {
-    "income": ("wage", "gift"),
-    "housing": ("rent", "internet"),
-    "vehicle": ("fuel", "parking"),
-}
+categories = (
+    "income - wage",
+    "income - gift",
+    "housing - rent",
+    "housing - internet",
+    "vehicle - fuel",
+    "vehicle - parking",
+)
 
 
 # Initialize connection.

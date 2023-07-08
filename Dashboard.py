@@ -18,18 +18,39 @@ def set_up_page():
     st.title(f"{page_icon} {page_title}")
 
 
-def show_dashboard(conn):
+def show_dashboard(conn: psycopg2.extensions.connection):
+    # Show dashboard
     st.write("This is a summary of your networth ...")
+    # TODO: Add total liabilities
     st.header("💰 Total Net Worth")
-    total_net_worth_query = "SELECT SUM(BALANCE) FROM WEALTH_TRACKER.ASSET"
+    total_net_worth_query: str = """
+        SELECT
+            SUM(COALESCE(T.AMOUNT, A.BALANCE)) AS BALANCE
+        FROM WEALTH_TRACKER.ASSET A
+        LEFT JOIN WEALTH_TRACKER.TRANSACTION T
+            ON A.ID = T.ASSET_ID
+        """
     total_net_worth: str = run_query_list(_conn=conn, query=total_net_worth_query)[0][0]
     col1, col2 = st.columns(2)
-    col1.metric(label="Net Worth", value=str(total_net_worth), delta=-5000000)
+    col1.metric(label="Total Net Worth", value=str(total_net_worth), delta=-5000000)
     chart_data = pd.DataFrame(np.random.randn(10, 1), columns=["a"])
     col2.area_chart(chart_data, height=200)
 
     st.header("📈 Assets")
-    balance_per_asset_query: str = "SELECT NAME, CURRENCY, SUM(BALANCE) FROM WEALTH_TRACKER.ASSET GROUP BY NAME, CURRENCY ORDER BY NAME DESC"
+    balance_per_asset_query: str = """
+        SELECT
+            A.NAME,
+            A.CURRENCY,
+            SUM(COALESCE(T.AMOUNT, A.BALANCE)) AS BALANCE
+        FROM WEALTH_TRACKER.ASSET A
+        LEFT JOIN WEALTH_TRACKER.TRANSACTION T
+            ON A.ID = T.ASSET_ID
+        GROUP BY 
+            A.NAME,
+            A.CURRENCY
+        ORDER BY BALANCE DESC
+        """
+
     balance_per_asset: str = run_query_list(_conn=conn, query=balance_per_asset_query)
     for asset in balance_per_asset:
         col1, col2 = st.columns(2)
@@ -53,7 +74,6 @@ def main():
     conn: psycopg2.extensions.connection = init_connection()
 
     if login():
-        # Show dashboard
         show_dashboard(conn)
     else:
         st.warning("Please enter your username and password")
