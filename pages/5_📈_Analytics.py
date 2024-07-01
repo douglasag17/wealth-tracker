@@ -1,1 +1,0 @@
-# Columns and containers https://blog.streamlit.io/introducing-new-layout-options-for-streamlit/?utm_medium=email&_hsmi=231961831&_hsenc=p2ANqtz-_vRkodGsqt4TUXdpIw7Gssy5azRiLyiKOQVFN5rZHNC8T7p4O0vRqEfOh0Cq5jXH1nv2YoT1GUom-5rh1EP7LgoYCyvQ&utm_content=231961831&utm_source=hs_automation
