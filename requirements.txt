@@ -1,3 +1,2 @@
-streamlit
-sqlalchemy
-pandas
+fastapi
+sqlmodel

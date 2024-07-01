@@ -1,11 +1,11 @@
 # wealth-tracker
 
-Go to https://wealth-tracker.streamlit.app/ and https://share.streamlit.io/
+[Docker image FastAPI](https://fastapi.tiangolo.com/deployment/docker/#build-a-docker-image-for-fastapi)
 
-`python -m venv .venv`
+```shell
+docker build -t wealth-tracker-image .
 
-`source .venv/bin/activate`
+docker run -d --name wealth-tracker-container -p 80:80 wealth-tracker-image
+```
 
-`pip install -r requirements.txt`
-
-`python -m streamlit run app.py `
+Go to: http://127.0.0.1/docs
