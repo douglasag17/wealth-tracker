@@ -1,14 +1,14 @@
 from app.api.routes import transactions
 from fastapi import APIRouter, FastAPI
-from app.db import init_db
+from app.db import create_db_and_tables
 
 
 app = FastAPI(title="Wealth Tracker")
 
 
 @app.on_event("startup")
-async def on_startup():
-    await init_db()
+def on_startup():
+    create_db_and_tables()
 
 
 @app.get("/health-check")

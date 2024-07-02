@@ -6,6 +6,7 @@
 cd backend
 
 docker compose watch
+
 docker compose down
 ```
 
