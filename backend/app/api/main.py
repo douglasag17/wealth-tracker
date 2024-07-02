@@ -13,7 +13,8 @@ async def on_startup():
 
 @app.get("/health-check")
 async def get_health_check():
-    return {"Hello": "World"}
+    return {"Hello": "World!!!"}
+
 
 router = APIRouter()
 app.include_router(router)
