@@ -1,53 +1,33 @@
-from typing import Any, Union
+from typing import Union, List
 
-from fastapi import APIRouter
-from sqlmodel import func, select
+from fastapi import APIRouter, Depends
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models import Transaction, Hero
+
+from app.db import get_session
+from app.models import Transaction, TransactionCreate
+
 
 router = APIRouter()
 
 
-# @router.get("/", response_model=Transaction)
-# def read_items(
-#     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
-# ) -> Any:
-#     """
-#     Retrieve items.
-#     """
-
-#     if current_user.is_superuser:
-#         count_statement = select(func.count()).select_from(Item)
-#         count = session.exec(count_statement).one()
-#         statement = select(Item).offset(skip).limit(limit)
-#         items = session.exec(statement).all()
-#     else:
-#         count_statement = (
-#             select(func.count())
-#             .select_from(Item)
-#             .where(Item.owner_id == current_user.id)
-#         )
-#         count = session.exec(count_statement).one()
-#         statement = (
-#             select(Item)
-#             .where(Item.owner_id == current_user.id)
-#             .offset(skip)
-#             .limit(limit)
-#         )
-#         items = session.exec(statement).all()
-
-#     return ItemsPublic(data=items, count=count)
+@router.get("/", response_model=List[Transaction])
+async def get_transactions(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Transaction))
+    transactions = result.scalars().all()
+    return [Transaction(id=transaction.id, category=transaction.category, amount=transaction.amount) for transaction in transactions]
 
 
-
-
-
-@router.get("/")
-def read_root():
-    return {"Hello": "World"}
+@router.post("/")
+async def add_transaction(transaction: TransactionCreate, session: AsyncSession = Depends(get_session)):
+    new_transaction = Transaction(category=transaction.category, amount=transaction.amount)
+    session.add(new_transaction)
+    await session.commit()
+    await session.refresh(new_transaction)
+    return new_transaction
 
 
 @router.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
-
