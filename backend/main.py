@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from sqlmodel import Session, select
 from contextlib import asynccontextmanager
 from .database import engine, create_db_and_tables, drop_db_and_tables
@@ -36,6 +36,15 @@ def get_accounts():
     with Session(engine) as session:
         accounts = session.exec(select(Account)).all()
         return accounts
+
+
+@app.get("/accounts/{account_id}", response_model=Account)
+def get_account(account_id: int):
+    with Session(engine) as session:
+        account = session.get(Account, account_id)
+        if not account:
+            raise HTTPException(status_code=404, detail="Hero not found")
+        return account
 
 
 @app.post("/transactions/", response_model=Transaction)
