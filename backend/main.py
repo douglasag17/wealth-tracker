@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
 @app.post("/accounts/", response_model=Account)
 def create_account(account: Account):
     with Session(engine) as session:
