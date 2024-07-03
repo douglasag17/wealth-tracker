@@ -1,29 +1,14 @@
 from fastapi import FastAPI
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Session, select
 from contextlib import asynccontextmanager
-
-
-class Hero(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    secret_name: str
-    age: int | None = Field(default=None, index=True)
-
-
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+from .database import create_db_and_tables, engine
+from .models import Transaction
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    The first part of the function, before the yield, will be executed before the application starts. 
+    The first part of the function, before the yield, will be executed before the application starts.
     And the part after the yield will be executed after the application has finished.
 
     Args:
@@ -32,21 +17,21 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
 
+
 app = FastAPI(lifespan=lifespan)
 
 
-@app.post("/heroes/", response_model=Hero)
-def create_hero(hero: Hero):
+@app.post("/transactions/", response_model=Transaction)
+def create_hero(transaction: Transaction):
     with Session(engine) as session:
-        session.add(hero)
+        session.add(transaction)
         session.commit()
-        session.refresh(hero)
-        return hero
+        session.refresh(transaction)
+        return transaction
 
 
-@app.get("/heroes/", response_model=list[Hero])
+@app.get("/transactions/", response_model=list[Transaction])
 def read_heroes():
     with Session(engine) as session:
-        heroes = session.exec(select(Hero)).all()
-        return heroes
-
+        transactions = session.exec(select(Transaction)).all()
+        return transactions
