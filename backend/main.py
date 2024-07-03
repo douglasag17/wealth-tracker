@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from sqlmodel import Session, select
 from contextlib import asynccontextmanager
-from .database import create_db_and_tables, engine
-from .models import Transaction
+from .database import engine, create_db_and_tables, drop_db_and_tables
+from .models import Transaction, Account
 
 
 @asynccontextmanager
@@ -16,13 +16,29 @@ async def lifespan(app: FastAPI):
     """
     create_db_and_tables()
     yield
+    drop_db_and_tables()
 
 
 app = FastAPI(lifespan=lifespan)
 
+@app.post("/accounts/", response_model=Account)
+def create_account(account: Account):
+    with Session(engine) as session:
+        session.add(account)
+        session.commit()
+        session.refresh(account)
+        return account
+
+
+@app.get("/accounts/", response_model=list[Account])
+def get_accounts():
+    with Session(engine) as session:
+        accounts = session.exec(select(Account)).all()
+        return accounts
+
 
 @app.post("/transactions/", response_model=Transaction)
-def create_hero(transaction: Transaction):
+def create_transaction(transaction: Transaction):
     with Session(engine) as session:
         session.add(transaction)
         session.commit()
@@ -31,7 +47,7 @@ def create_hero(transaction: Transaction):
 
 
 @app.get("/transactions/", response_model=list[Transaction])
-def read_heroes():
+def get_transactions():
     with Session(engine) as session:
         transactions = session.exec(select(Transaction)).all()
         return transactions
