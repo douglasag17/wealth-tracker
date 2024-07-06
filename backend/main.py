@@ -68,6 +68,17 @@ def get_account(account_id: int):
         return account
 
 
+@app.delete("/accounts/{account_id}")
+def delete_account(account_id: int):
+    with Session(engine) as session:
+        account = session.get(Account, account_id)
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found")
+        session.delete(account)
+        session.commit()
+        return {"ok": True}
+
+
 @app.post("/transactions/", response_model=Transaction)
 def create_transaction(transaction: Transaction):
     with Session(engine) as session:
