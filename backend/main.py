@@ -2,7 +2,15 @@ from fastapi import FastAPI, HTTPException
 from sqlmodel import Session, select
 from contextlib import asynccontextmanager
 from .database import engine, create_db_and_tables, drop_db_and_tables
-from .models import Transaction, Account
+from .models import (
+    Currency,
+    AccountType,
+    Account,
+    Category,
+    SubCategory,
+    Transaction,
+    MonthlyBudget,
+)
 
 
 @asynccontextmanager
@@ -20,6 +28,19 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/currencies/", response_model=list[Currency])
+def get_currencies():
+    with Session(engine) as session:
+        currencies = session.exec(select(Currency)).all()
+        return currencies
+
+@app.get("/account_types/", response_model=list[AccountType])
+def get_account_types():
+    with Session(engine) as session:
+        account_types = session.exec(select(AccountType)).all()
+        return account_types
 
 
 @app.post("/accounts/", response_model=Account)

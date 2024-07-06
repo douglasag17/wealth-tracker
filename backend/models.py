@@ -18,6 +18,7 @@ class Account(SQLModel, table=True):
     name: str = Field(nullable=False)
     account_type_id: int = Field(default=None, foreign_key="accounttype.id")
     currency_id: int = Field(default=None, foreign_key="currency.id")
+    # created_at: str = Field(default=None)  # TODO:
 
 
 class Category(SQLModel, table=True):

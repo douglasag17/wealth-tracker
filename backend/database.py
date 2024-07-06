@@ -45,8 +45,10 @@ def create_account_types():
     with Session(engine) as session:
         account_type_1 = AccountType(id=1, type="savings account")
         account_type_2 = AccountType(id=2, type="credit card")
+        account_type_3 = AccountType(id=3, type="cash")
         session.add(account_type_1)
         session.add(account_type_2)
+        session.add(account_type_3)
         session.commit()
 
 
@@ -58,8 +60,12 @@ def create_accounts():
         account_2 = Account(
             id=2, name="bancolombia mastercard black", account_type_id=2, currency_id=1
         )
+        account_3 = Account(
+            id=3, name="usd cash", account_type_id=3, currency_id=2
+        )
         session.add(account_1)
         session.add(account_2)
+        session.add(account_3)
         session.commit()
 
 
