@@ -24,10 +24,14 @@ def get_accounts():
     column_config: str = {
         "name": st.column_config.TextColumn("Name", required=True),
         "currency": st.column_config.SelectboxColumn(
-            "Currency", required=True, options=[currency["name"] for currency in currencies]
+            "Currency",
+            required=True,
+            options=[currency["name"] for currency in currencies],
         ),
         "account_type": st.column_config.SelectboxColumn(
-            "Type", required=True, options=[account_type["type"] for account_type in account_types]
+            "Type",
+            required=True,
+            options=[account_type["type"] for account_type in account_types],
         ),
     }
     column_order = ("name", "currency", "account_type")
@@ -39,24 +43,16 @@ def get_accounts():
             num_rows="dynamic",
             column_config=column_config,
             column_order=column_order,
-            hide_index=True
+            hide_index=True,
         )
-
-        # Updated data
-        # st.write("edited_accounts")
-        # st.write(edited_accounts)
-        st.write("added_rows")
-        st.write(st.session_state["edited_accounts"]["added_rows"])
-        st.write("edited_rows")
-        st.write(st.session_state["edited_accounts"]["edited_rows"])
-        st.write("deleted_rows")
-        st.write(st.session_state["edited_accounts"]["deleted_rows"])
 
         # Submit button
         if st.form_submit_button("Update accounts"):
-            
+
             # Insert new accounts
-            added_accounts: list[dict] = st.session_state["edited_accounts"]["added_rows"]
+            added_accounts: list[dict] = st.session_state["edited_accounts"][
+                "added_rows"
+            ]
             if added_accounts:
                 # Adding foreing keys
                 for i, new_account in enumerate(added_accounts):
@@ -66,15 +62,15 @@ def get_accounts():
                     for account_type in account_types:
                         if new_account["account_type"] == account_type["type"]:
                             added_accounts[i]["account_type_id"] = account_type["id"]
-                    
+
                     payload: dict = {
                         "name": new_account["name"],
                         "account_type_id": new_account["account_type_id"],
-                        "currency_id": new_account["currency_id"]
+                        "currency_id": new_account["currency_id"],
                     }
                     # api call to add new accounts
                     requests.post(url=f"{API_URL}/accounts/", json=payload)
-            
+
             # Update accounts
             updated_accounts: dict = st.session_state["edited_accounts"]["edited_rows"]
             if updated_accounts:
@@ -88,9 +84,10 @@ def get_accounts():
                     account_id = accounts[deleted_account_index]["id"]
                     # api call to delete account
                     requests.delete(url=f"{API_URL}/accounts/{account_id}")
-            
+
             # Refresh app
             st.rerun()
+
 
 def main():
     set_up_page()

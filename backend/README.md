@@ -25,3 +25,5 @@ docker compose down
 ```
 
 Go to: http://127.0.0.1:8000/docs
+
+TODO: add tests https://sqlmodel.tiangolo.com/tutorial/fastapi/tests/

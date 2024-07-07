@@ -1,24 +1,69 @@
-from typing import List, Optional
-from sqlmodel import SQLModel, Field
+from typing import List
+from sqlmodel import SQLModel, Field, Relationship
 from decimal import Decimal
 
 
-class Currency(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+class CurrencyBase(SQLModel):
     name: str = Field(nullable=False)  # COP, USD
 
 
-class AccountType(SQLModel, table=True):
+class Currency(CurrencyBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+
+    currencies: List["Account"] = Relationship(back_populates="currency")
+
+
+class CurrencyPublic(CurrencyBase):
+    id: int
+
+
+class AccountTypeBase(SQLModel):
     type: str = Field(nullable=False)
 
 
-class Account(SQLModel, table=True):
+class AccountType(AccountTypeBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+
+    accounts: List["Account"] = Relationship(back_populates="account_type")
+
+
+class AccountTypePublic(AccountTypeBase):
+    id: int
+
+
+class AccountBase(SQLModel):
     name: str = Field(nullable=False)
-    account_type_id: int = Field(default=None, foreign_key="accounttype.id")
-    currency_id: int = Field(default=None, foreign_key="currency.id")
     # created_at: str = Field(default=None)  # TODO:
+
+    currency_id: int = Field(default=None, foreign_key="currency.id")
+
+    account_type_id: int = Field(default=None, foreign_key="accounttype.id")
+
+
+class Account(AccountBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
+    currency: Currency | None = Relationship(back_populates="currencies")
+    account_type: AccountType | None = Relationship(back_populates="accounts")
+
+
+class AccountPublic(AccountBase):
+    id: int
+
+
+class AccountCreate(AccountBase):
+    pass
+
+
+class AccountUpdate(SQLModel):
+    name: str | None = None
+    currency_id: int | None = None
+    account_type_id: int | None = None
+
+
+class AccountPublicWithTypeAndCurrency(AccountPublic):
+    currency: CurrencyPublic | None = None
+    account_type: AccountTypePublic | None = None
 
 
 class Category(SQLModel, table=True):

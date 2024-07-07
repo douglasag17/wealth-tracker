@@ -16,6 +16,11 @@ connect_args = {"check_same_thread": False}
 engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
 
 
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
 def create_db_and_tables():
     drop_db_and_tables()
     SQLModel.metadata.create_all(engine)
@@ -60,9 +65,7 @@ def create_accounts():
         account_2 = Account(
             id=2, name="bancolombia mastercard black", account_type_id=2, currency_id=1
         )
-        account_3 = Account(
-            id=3, name="usd cash", account_type_id=3, currency_id=2
-        )
+        account_3 = Account(id=3, name="usd cash", account_type_id=3, currency_id=2)
         session.add(account_1)
         session.add(account_2)
         session.add(account_3)
