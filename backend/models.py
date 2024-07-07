@@ -10,7 +10,7 @@ class CurrencyBase(SQLModel):
 class Currency(CurrencyBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    currencies: List["Account"] = Relationship(back_populates="currency")
+    accounts: List["Account"] = Relationship(back_populates="currency")
 
 
 class CurrencyPublic(CurrencyBase):
@@ -43,7 +43,7 @@ class AccountBase(SQLModel):
 class Account(AccountBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    currency: Currency | None = Relationship(back_populates="currencies")
+    currency: Currency | None = Relationship(back_populates="accounts")
     account_type: AccountType | None = Relationship(back_populates="accounts")
 
 

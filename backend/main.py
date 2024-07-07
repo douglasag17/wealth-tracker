@@ -8,6 +8,10 @@ from .models import (
     AccountCreate,
     AccountUpdate,
     AccountPublicWithTypeAndCurrency,
+    Currency,
+    CurrencyPublic,
+    AccountType,
+    AccountTypePublic,
 )
 
 
@@ -75,3 +79,15 @@ def update_account(
     session.commit()
     session.refresh(db_account)
     return db_account
+
+
+@app.get("/currencies/", response_model=list[CurrencyPublic])
+def get_currencies(*, session: Session = Depends(get_session)):
+    currencies = session.exec(select(Currency)).all()
+    return currencies
+
+
+@app.get("/account_types/", response_model=list[AccountTypePublic])
+def get_account_types(*, session: Session = Depends(get_session)):
+    account_types = session.exec(select(AccountType)).all()
+    return account_types
