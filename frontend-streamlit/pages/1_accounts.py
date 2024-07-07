@@ -58,13 +58,12 @@ def get_accounts():
                     for account_type in account_types:
                         if new_account["account_type.type"] == account_type["type"]:
                             added_accounts[i]["account_type_id"] = account_type["id"]
-
+                    # api call to add new accounts
                     payload: dict = {
                         "name": new_account["name"],
                         "account_type_id": new_account["account_type_id"],
                         "currency_id": new_account["currency_id"],
                     }
-                    # api call to add new accounts
                     requests.post(url=f"{API_URL}/accounts/", json=payload)
 
             # Update accounts
@@ -72,7 +71,29 @@ def get_accounts():
                 "edited_rows"
             ]
             if updated_accounts:
-                pass
+                # Adding foreing keys
+                for df_index, updated_account in updated_accounts.items():
+                    if updated_account.get("currency.name"):
+                        for currency in currencies:
+                            if updated_account["currency.name"] == currency["name"]:
+                                accounts[df_index]["currency_id"] = currency["id"]
+                    if updated_account.get("account_type.type"):
+                        for account_type in account_types:
+                            if (
+                                updated_account["account_type.type"]
+                                == account_type["type"]
+                            ):
+                                accounts[df_index]["account_type_id"] = account_type[
+                                    "id"
+                                ]
+                    # api call to update accounts
+                    payload: dict = {
+                        "name": updated_account.get("name", accounts[df_index]["name"]),
+                        "currency_id": accounts[df_index]["currency_id"],
+                        "account_type_id": accounts[df_index]["account_type_id"],
+                    }
+                    account_id = accounts[df_index]["id"]
+                    requests.patch(url=f"{API_URL}/accounts/{account_id}", json=payload)
 
             # Delete accounts
             deleted_accounts: list = st.session_state["edited_accounts_df"][
