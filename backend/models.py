@@ -1,6 +1,7 @@
 from typing import List
 from sqlmodel import SQLModel, Field, Relationship
 from decimal import Decimal
+from datetime import datetime
 
 
 class CurrencyBase(SQLModel):
@@ -33,7 +34,11 @@ class AccountTypePublic(AccountTypeBase):
 
 class AccountBase(SQLModel):
     name: str = Field(nullable=False)
-    # created_at: str = Field(default=None)  # TODO:
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
 
     currency_id: int = Field(default=None, foreign_key="currency.id")
 

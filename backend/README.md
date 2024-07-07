@@ -26,4 +26,7 @@ docker compose down
 
 Go to: http://127.0.0.1:8000/docs
 
-TODO: add tests https://sqlmodel.tiangolo.com/tutorial/fastapi/tests/
+### TODO:
+
+- [ ] add tests https://sqlmodel.tiangolo.com/tutorial/fastapi/tests/
+- [ ] [How to Set Relationship Cascade Options in SQLModel](https://jacob-t-graham.com/2024/05/23/how-to-set-relationship-cascade-options-in-sqlmodel/)

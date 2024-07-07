@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from utils import set_up_page, API_URL
 import pandas as pd
+from datetime import datetime
 
 
 def get_accounts():
@@ -28,8 +29,21 @@ def get_accounts():
             required=True,
             options=[account_type["type"] for account_type in account_types],
         ),
+        "created_at": st.column_config.DatetimeColumn(
+            "Created At", format="YYYY-MM-DD HH:mm:ss"
+        ),
+        "updated_at": st.column_config.DatetimeColumn(
+            "Updated At", format="YYYY-MM-DD HH:mm:ss"
+        ),
     }
-    column_order = ("name", "currency.name", "account_type.type")
+    column_order = (
+        "name",
+        "currency.name",
+        "account_type.type",
+        "created_at",
+        "updated_at",
+    )
+    disabled: list = ["created_at", "updated_at"]
 
     with st.form("form_edit_accounts"):
         st.data_editor(
@@ -37,6 +51,7 @@ def get_accounts():
             key="edited_accounts_df",
             column_config=column_config,
             column_order=column_order,
+            disabled=disabled,
             use_container_width=True,
             hide_index=True,
             num_rows="dynamic",
