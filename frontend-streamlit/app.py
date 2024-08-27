@@ -1,5 +1,3 @@
-import streamlit as st
-import requests
 from utils import set_up_page
 
 

@@ -4,6 +4,7 @@ from decimal import Decimal
 from datetime import datetime
 
 
+# Currency Model
 class CurrencyBase(SQLModel):
     name: str = Field(nullable=False)  # COP, USD
 
@@ -18,6 +19,7 @@ class CurrencyPublic(CurrencyBase):
     id: int
 
 
+# AccountType Model
 class AccountTypeBase(SQLModel):
     type: str = Field(nullable=False)
 
@@ -32,6 +34,7 @@ class AccountTypePublic(AccountTypeBase):
     id: int
 
 
+# Account Model
 class AccountBase(SQLModel):
     name: str = Field(nullable=False)
     created_at: datetime | None = Field(default_factory=datetime.utcnow)
@@ -71,18 +74,44 @@ class AccountPublicWithTypeAndCurrency(AccountPublic):
     account_type: AccountTypePublic | None = None
 
 
-class Category(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+# Category Model
+class CategoryBase(SQLModel):
     name: str = Field(nullable=False)
+    type: str = Field(nullable=False)  # income, expense
 
 
-class SubCategory(SQLModel, table=True):
+class Category(CategoryBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+
+    subcategories: List["SubCategory"] = Relationship(back_populates="category")
+
+
+class CategoryPublic(CategoryBase):
+    id: int
+
+
+# SubCategory Model
+class SubCategoryBase(SQLModel):
     name: str = Field(nullable=False)
+
     category_id: int = Field(default=None, foreign_key="category.id")
-    type: str = Field(nullable=False)  # must, need, want
 
 
+class SubCategory(SubCategoryBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
+    category: Category | None = Relationship(back_populates="subcategories")
+
+
+class SubCategoryPublic(SubCategoryBase):
+    id: int
+
+
+class CategoryPublicWithSubcategories(CategoryPublic):
+    subcategories: List[SubCategoryPublic] = []
+
+
+# Transaction Model
 class Transaction(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     account_id: int = Field(default=None, foreign_key="account.id")
@@ -95,6 +124,7 @@ class Transaction(SQLModel, table=True):
     # is_planned: bool  # TODO:
 
 
+# MonthlyBudget Model
 class MonthlyBudget(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     subcategory_id: int = Field(default=None, foreign_key="subcategory.id")

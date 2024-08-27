@@ -5,8 +5,6 @@ from .models import (
     Account,
     Category,
     SubCategory,
-    Transaction,
-    MonthlyBudget,
 )
 
 
@@ -74,9 +72,9 @@ def create_accounts():
 
 def create_categories():
     with Session(engine) as session:
-        category_1 = Category(id=1, name="income")
-        category_2 = Category(id=2, name="housing")
-        category_3 = Category(id=3, name="food")
+        category_1 = Category(id=1, name="income", type="income")
+        category_2 = Category(id=2, name="housing", type="expense")
+        category_3 = Category(id=3, name="food", type="expense")
         session.add(category_1)
         session.add(category_2)
         session.add(category_3)
@@ -85,10 +83,10 @@ def create_categories():
 
 def create_subcategories():
     with Session(engine) as session:
-        subcategory_1 = SubCategory(id=1, name="wage", category_id=1, type="must")
-        subcategory_2 = SubCategory(id=2, name="rent", category_id=2, type="must")
-        subcategory_3 = SubCategory(id=3, name="groceries", category_id=3, type="need")
-        subcategory_4 = SubCategory(id=4, name="restaurant", category_id=3, type="want")
+        subcategory_1 = SubCategory(id=1, name="wage", category_id=1)
+        subcategory_2 = SubCategory(id=2, name="rent", category_id=2)
+        subcategory_3 = SubCategory(id=3, name="groceries", category_id=3)
+        subcategory_4 = SubCategory(id=4, name="restaurant", category_id=3)
         session.add(subcategory_1)
         session.add(subcategory_2)
         session.add(subcategory_3)

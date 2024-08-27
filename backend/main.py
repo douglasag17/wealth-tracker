@@ -12,6 +12,8 @@ from .models import (
     CurrencyPublic,
     AccountType,
     AccountTypePublic,
+    Category,
+    CategoryPublicWithSubcategories,
 )
 
 
@@ -91,3 +93,9 @@ def get_currencies(*, session: Session = Depends(get_session)):
 def get_account_types(*, session: Session = Depends(get_session)):
     account_types = session.exec(select(AccountType)).all()
     return account_types
+
+
+@app.get("/categories/", response_model=list[CategoryPublicWithSubcategories])
+def get_categories(*, session: Session = Depends(get_session)):
+    categories = session.exec(select(Category)).all()
+    return categories

@@ -1,3 +1,4 @@
 *.pyc
 .venv
 backend/database.db
+.DS_Store

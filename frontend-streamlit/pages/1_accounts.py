@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 from utils import set_up_page, API_URL
 import pandas as pd
-from datetime import datetime
 
 
 def get_accounts():
@@ -59,7 +58,6 @@ def get_accounts():
 
         # Submit button
         if st.form_submit_button("Save changes"):
-
             # Insert new accounts
             added_accounts: list[dict] = st.session_state["edited_accounts_df"][
                 "added_rows"
