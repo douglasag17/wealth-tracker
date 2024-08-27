@@ -53,6 +53,7 @@ class Account(AccountBase, table=True):
 
     currency: Currency | None = Relationship(back_populates="accounts")
     account_type: AccountType | None = Relationship(back_populates="accounts")
+    transaction: List["Transaction"] = Relationship(back_populates="account")
 
 
 class AccountPublic(AccountBase):
@@ -101,6 +102,7 @@ class SubCategory(SubCategoryBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     category: Category | None = Relationship(back_populates="subcategories")
+    transactions: List["Transaction"] = Relationship(back_populates="subcategory")
 
 
 class SubCategoryPublic(SubCategoryBase):
@@ -111,17 +113,53 @@ class CategoryPublicWithSubcategories(CategoryPublic):
     subcategories: List[SubCategoryPublic] = []
 
 
+class SubCategoryPublicWithCategory(SubCategoryPublic):
+    category: CategoryPublic | None = None
+
+
 # Transaction Model
-class Transaction(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    account_id: int = Field(default=None, foreign_key="account.id")
-    transaction_type: str = Field(nullable=False, default="income")  # income, expense
-    subcategory_id: int = Field(default=None, foreign_key="subcategory.id")
+class TransactionBase(SQLModel):
     amount: Decimal = Field(default=0, max_digits=50, decimal_places=2, nullable=False)
     description: str = Field(nullable=False)
-    # created_at: str = Field(default=None)  # TODO:
-    # is_paid: bool  # TODO:
-    # is_planned: bool  # TODO:
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
+    is_planned: bool = Field(default=False)
+    is_paid: bool = Field(default=False)
+
+    subcategory_id: int = Field(default=None, foreign_key="subcategory.id")
+    account_id: int = Field(default=None, foreign_key="account.id")
+
+
+class Transaction(TransactionBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
+    subcategory: SubCategory | None = Relationship(back_populates="transactions")
+    account: Account | None = Relationship(back_populates="transaction")
+
+
+class TransactionPublic(TransactionBase):
+    id: int
+
+
+class TransactionCreate(TransactionBase):
+    pass
+
+
+class TransactionUpdate(SQLModel):
+    amount: Decimal | None = None
+    description: str | None = None
+    is_planned: bool | None = None
+    is_paid: bool | None = None
+    subcategory_id: int | None = None
+    account_id: int | None = None
+
+
+class TransactionPublicWithSubcategoryAndAccount(TransactionPublic):
+    subcategory: SubCategoryPublic | None = None
+    account: AccountPublic | None = None
 
 
 # MonthlyBudget Model

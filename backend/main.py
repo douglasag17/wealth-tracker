@@ -14,6 +14,13 @@ from .models import (
     AccountTypePublic,
     Category,
     CategoryPublicWithSubcategories,
+    SubCategory,
+    SubCategoryPublicWithCategory,
+    Transaction,
+    TransactionPublic,
+    TransactionCreate,
+    TransactionUpdate,
+    TransactionPublicWithSubcategoryAndAccount,
 )
 
 
@@ -99,3 +106,68 @@ def get_account_types(*, session: Session = Depends(get_session)):
 def get_categories(*, session: Session = Depends(get_session)):
     categories = session.exec(select(Category)).all()
     return categories
+
+
+@app.get("/sub_categories/", response_model=list[SubCategoryPublicWithCategory])
+def get_sub_categories(*, session: Session = Depends(get_session)):
+    sub_categories = session.exec(select(SubCategory)).all()
+    return sub_categories
+
+
+@app.get(
+    "/transactions/", response_model=list[TransactionPublicWithSubcategoryAndAccount]
+)
+def get_transactions(*, session: Session = Depends(get_session)):
+    transactions = session.exec(select(Transaction)).all()
+    return transactions
+
+
+@app.post("/transactions/", response_model=TransactionPublic)
+def create_transaction(
+    *, session: Session = Depends(get_session), transaction: TransactionCreate
+):
+    db_transaction = Transaction.model_validate(transaction)
+    session.add(db_transaction)
+    session.commit()
+    session.refresh(db_transaction)
+    return db_transaction
+
+
+@app.get(
+    "/transactions/{transaction_id}",
+    response_model=TransactionPublicWithSubcategoryAndAccount,
+)
+def get_transaction(*, session: Session = Depends(get_session), transaction_id: int):
+    transaction = session.get(Transaction, transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return transaction
+
+
+@app.delete("/transactions/{transaction_id}")
+def delete_transaction(*, session: Session = Depends(get_session), transaction_id: int):
+    transaction = session.get(Transaction, transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    session.delete(transaction)
+    session.commit()
+    return {"ok": True}
+
+
+@app.patch("/transactions/{transaction_id}", response_model=TransactionPublic)
+def update_transaction(
+    *,
+    session: Session = Depends(get_session),
+    transaction_id: int,
+    transaction: TransactionUpdate,
+):
+    db_transaction = session.get(Transaction, transaction_id)
+    if not db_transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    transaction_data = transaction.model_dump(exclude_unset=True)
+    for key, value in transaction_data.items():
+        setattr(db_transaction, key, value)
+    session.add(db_transaction)
+    session.commit()
+    session.refresh(db_transaction)
+    return db_transaction

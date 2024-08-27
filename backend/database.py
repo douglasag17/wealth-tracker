@@ -1,11 +1,5 @@
 from sqlmodel import SQLModel, create_engine, Session
-from .models import (
-    Currency,
-    AccountType,
-    Account,
-    Category,
-    SubCategory,
-)
+from .models import Currency, AccountType, Account, Category, SubCategory, Transaction
 
 
 sqlite_file_name = "database.db"
@@ -96,7 +90,23 @@ def create_subcategories():
 
 def create_transactions():
     with Session(engine) as session:
-        pass
+        transaction_1 = Transaction(
+            id=1,
+            amount=22000000,
+            description="Factored wage",
+            account_id=1,
+            subcategory_id=1,
+        )
+        transaction_2 = Transaction(
+            id=2,
+            amount=3000000,
+            description="Rent Torre Cibeles",
+            account_id=1,
+            subcategory_id=2,
+        )
+        session.add(transaction_1)
+        session.add(transaction_2)
+        session.commit()
 
 
 def create_monthly_budget():
