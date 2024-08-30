@@ -29,12 +29,6 @@ def get_accounts():
             required=True,
             options=[account_type["type"] for account_type in account_types],
         ),
-        "created_at": st.column_config.DatetimeColumn(
-            "Created At", format="YYYY-MM-DD HH:mm:ss"
-        ),
-        "updated_at": st.column_config.DatetimeColumn(
-            "Updated At", format="YYYY-MM-DD HH:mm:ss"
-        ),
     }
     column_order = ("name", "currency.name", "account_type.type")
     disabled: list = ["created_at", "updated_at"]
@@ -53,69 +47,66 @@ def get_accounts():
 
         # Submit button
         if st.form_submit_button("Save changes"):
-            # Insert new accounts
-            added_accounts: List[Dict] = st.session_state["edited_accounts_df"][
-                "added_rows"
-            ]
-            if added_accounts:
-                # Adding foreing keys
-                for i, new_account in enumerate(added_accounts):
-                    for currency in currencies:
-                        if new_account["currency.name"] == currency["name"]:
-                            added_accounts[i]["currency_id"] = currency["id"]
-                    for account_type in account_types:
-                        if new_account["account_type.type"] == account_type["type"]:
-                            added_accounts[i]["account_type_id"] = account_type["id"]
-                    # api call to add new accounts
-                    payload: Dict = {
-                        "name": new_account["name"],
-                        "account_type_id": new_account["account_type_id"],
-                        "currency_id": new_account["currency_id"],
-                    }
-                    requests.post(url=f"{API_URL}/accounts/", json=payload)
-
-            # Update accounts
-            updated_accounts: Dict = st.session_state["edited_accounts_df"][
-                "edited_rows"
-            ]
-            if updated_accounts:
-                # Adding foreing keys
-                for df_index, updated_account in updated_accounts.items():
-                    if updated_account.get("currency.name"):
-                        for currency in currencies:
-                            if updated_account["currency.name"] == currency["name"]:
-                                accounts[df_index]["currency_id"] = currency["id"]
-                    if updated_account.get("account_type.type"):
-                        for account_type in account_types:
-                            if (
-                                updated_account["account_type.type"]
-                                == account_type["type"]
-                            ):
-                                accounts[df_index]["account_type_id"] = account_type[
-                                    "id"
-                                ]
-                    # api call to update accounts
-                    payload: Dict = {
-                        "name": updated_account.get("name", accounts[df_index]["name"]),
-                        "currency_id": accounts[df_index]["currency_id"],
-                        "account_type_id": accounts[df_index]["account_type_id"],
-                    }
-                    account_id = accounts[df_index]["id"]
-                    requests.patch(url=f"{API_URL}/accounts/{account_id}", json=payload)
-
-            # Delete accounts
-            deleted_accounts: list = st.session_state["edited_accounts_df"][
-                "deleted_rows"
-            ]
-            if deleted_accounts:
-                # Getting primary key
-                for deleted_account_index in deleted_accounts:
-                    account_id = accounts[deleted_account_index]["id"]
-                    # api call to delete account
-                    requests.delete(url=f"{API_URL}/accounts/{account_id}")
+            insert_new_accounts(accounts, currencies, account_types)
+            update_accounts(accounts, currencies, account_types)
+            delete_accounts(accounts)
 
             # Refresh app
             st.rerun()
+
+
+def insert_new_accounts(
+    accounts: List[Dict], currencies: List[Dict], account_types: List[Dict]
+):
+    added_accounts: List[Dict] = st.session_state["edited_accounts_df"]["added_rows"]
+    if added_accounts:
+        for i, new_account in enumerate(added_accounts):
+            for currency in currencies:
+                if new_account["currency.name"] == currency["name"]:
+                    added_accounts[i]["currency_id"] = currency["id"]
+            for account_type in account_types:
+                if new_account["account_type.type"] == account_type["type"]:
+                    added_accounts[i]["account_type_id"] = account_type["id"]
+            # api call to add new accounts
+            payload: Dict = {
+                "name": new_account["name"],
+                "account_type_id": new_account["account_type_id"],
+                "currency_id": new_account["currency_id"],
+            }
+            requests.post(url=f"{API_URL}/accounts/", json=payload)
+
+
+def update_accounts(
+    accounts: List[Dict], currencies: List[Dict], account_types: List[Dict]
+):
+    updated_accounts: Dict = st.session_state["edited_accounts_df"]["edited_rows"]
+    if updated_accounts:
+        for df_index, updated_account in updated_accounts.items():
+            if updated_account.get("currency.name"):
+                for currency in currencies:
+                    if updated_account["currency.name"] == currency["name"]:
+                        accounts[df_index]["currency_id"] = currency["id"]
+            if updated_account.get("account_type.type"):
+                for account_type in account_types:
+                    if updated_account["account_type.type"] == account_type["type"]:
+                        accounts[df_index]["account_type_id"] = account_type["id"]
+            # api call to update accounts
+            payload: Dict = {
+                "name": updated_account.get("name", accounts[df_index]["name"]),
+                "currency_id": accounts[df_index]["currency_id"],
+                "account_type_id": accounts[df_index]["account_type_id"],
+            }
+            account_id = accounts[df_index]["id"]
+            requests.patch(url=f"{API_URL}/accounts/{account_id}", json=payload)
+
+
+def delete_accounts(accounts: List[Dict]):
+    deleted_accounts: list = st.session_state["edited_accounts_df"]["deleted_rows"]
+    if deleted_accounts:
+        for deleted_account_index in deleted_accounts:
+            account_id = accounts[deleted_account_index]["id"]
+            # api call to delete account
+            requests.delete(url=f"{API_URL}/accounts/{account_id}")
 
 
 def main():

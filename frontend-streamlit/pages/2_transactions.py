@@ -3,6 +3,7 @@ import requests
 from utils import set_up_page, API_URL
 import pandas as pd
 from typing import List, Dict
+from datetime import datetime
 
 
 def get_transactions():
@@ -11,19 +12,24 @@ def get_transactions():
     # Getting data from API
     transactions: List[Dict] = requests.get(url=f"{API_URL}/transactions/").json()
     accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
-    categories: List[Dict] = requests.get(url=f"{API_URL}/categories/").json()
     subcategories: List[Dict] = requests.get(url=f"{API_URL}/sub_categories/").json()
 
     # Creating Dataframe
     transactions_df = pd.json_normalize(transactions)
     transactions_df["transaction_date"] = pd.to_datetime(
-        transactions_df["transaction_date"], infer_datetime_format=True
+        transactions_df["transaction_date"]
+    )
+    transactions_df["categories_with_subcategories"] = (
+        transactions_df["category.name"] + " - " + transactions_df["subcategory.name"]
     )
 
     # Writing table
     column_config: Dict = {
         "transaction_date": st.column_config.DatetimeColumn(
-            "Transaction Date", format="YYYY-MM-DD HH:mm:ss.SSS"
+            "Transaction Date",
+            format="YYYY-MM-DD HH:mm:ss.SSS",
+            required=True,
+            default=datetime.now(),
         ),
         "account.name": st.column_config.SelectboxColumn(
             "Account",
@@ -31,15 +37,13 @@ def get_transactions():
             options=[account["name"] for account in accounts],
         ),
         "amount": st.column_config.NumberColumn("Amount", required=True),
-        "category.name": st.column_config.SelectboxColumn(
+        "categories_with_subcategories": st.column_config.SelectboxColumn(
             "Category",
             required=True,
-            options=[category["name"] for category in categories],
-        ),
-        "subcategory.name": st.column_config.SelectboxColumn(
-            "Subcategory",
-            required=True,
-            options=[subcategory["name"] for subcategory in subcategories],
+            options=[
+                f"{subcategory["category"]["name"]} - {subcategory["name"]}"
+                for subcategory in subcategories
+            ],
         ),
         "description": st.column_config.TextColumn("Description"),
     }
@@ -47,8 +51,7 @@ def get_transactions():
         "transaction_date",
         "account.name",
         "amount",
-        "category.name",
-        "subcategory.name",
+        "categories_with_subcategories",
         "description",
     )
 
@@ -64,8 +67,11 @@ def get_transactions():
         )
 
         # Submit button
-        if st.form_submit_button("Submit"):
+        if st.form_submit_button("Save changes"):
             pass
+
+            # Refresh app
+            st.rerun()
 
 
 def main():
