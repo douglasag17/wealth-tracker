@@ -85,6 +85,7 @@ class Category(CategoryBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     subcategories: List["SubCategory"] = Relationship(back_populates="category")
+    transactions: List["Transaction"] = Relationship(back_populates="category")
 
 
 class CategoryPublic(CategoryBase):
@@ -121,6 +122,9 @@ class SubCategoryPublicWithCategory(SubCategoryPublic):
 class TransactionBase(SQLModel):
     amount: Decimal = Field(default=0, max_digits=50, decimal_places=2, nullable=False)
     description: str = Field(nullable=False)
+    transaction_date: datetime | None = Field(
+        default_factory=datetime.utcnow, nullable=False
+    )
     created_at: datetime | None = Field(default_factory=datetime.utcnow)
     updated_at: datetime | None = Field(
         default_factory=datetime.utcnow,
@@ -129,6 +133,7 @@ class TransactionBase(SQLModel):
     is_planned: bool = Field(default=False)
     is_paid: bool = Field(default=False)
 
+    category_id: int = Field(default=None, foreign_key="category.id")
     subcategory_id: int = Field(default=None, foreign_key="subcategory.id")
     account_id: int = Field(default=None, foreign_key="account.id")
 
@@ -136,6 +141,7 @@ class TransactionBase(SQLModel):
 class Transaction(TransactionBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
+    category: Category | None = Relationship(back_populates="transactions")
     subcategory: SubCategory | None = Relationship(back_populates="transactions")
     account: Account | None = Relationship(back_populates="transaction")
 
@@ -151,21 +157,23 @@ class TransactionCreate(TransactionBase):
 class TransactionUpdate(SQLModel):
     amount: Decimal | None = None
     description: str | None = None
+    transaction_date: datetime | None = None
     is_planned: bool | None = None
     is_paid: bool | None = None
     subcategory_id: int | None = None
     account_id: int | None = None
 
 
-class TransactionPublicWithSubcategoryAndAccount(TransactionPublic):
+class TransactionPublicWithCategorySubcategoryAndAccount(TransactionPublic):
+    category: CategoryPublic | None = None
     subcategory: SubCategoryPublic | None = None
     account: AccountPublic | None = None
 
 
 # MonthlyBudget Model
-class MonthlyBudget(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    subcategory_id: int = Field(default=None, foreign_key="subcategory.id")
-    year: int  # TODO:
-    month: int  # TODO:
-    budgeted: Decimal  # TODO:
+# class MonthlyBudget(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     subcategory_id: int = Field(default=None, foreign_key="subcategory.id")
+#     year: int  # TODO:
+#     month: int  # TODO:
+#     budgeted: Decimal  # TODO:

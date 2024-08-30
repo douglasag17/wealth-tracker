@@ -2,21 +2,22 @@ import streamlit as st
 import requests
 from utils import set_up_page, API_URL
 import pandas as pd
+from typing import List, Dict
 
 
 def get_accounts():
     st.subheader("Accounts")
 
     # Getting data from API
-    accounts: list[dict] = requests.get(url=f"{API_URL}/accounts/").json()
-    currencies: list[dict] = requests.get(url=f"{API_URL}/currencies/").json()
-    account_types: list[dict] = requests.get(url=f"{API_URL}/account_types/").json()
+    accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
+    currencies: List[Dict] = requests.get(url=f"{API_URL}/currencies/").json()
+    account_types: List[Dict] = requests.get(url=f"{API_URL}/account_types/").json()
 
     # Creating Dataframe
     accounts_df = pd.json_normalize(accounts)
 
     # Writing table
-    column_config: str = {
+    column_config: Dict = {
         "name": st.column_config.TextColumn("Name", required=True),
         "currency.name": st.column_config.SelectboxColumn(
             "Currency",
@@ -35,13 +36,7 @@ def get_accounts():
             "Updated At", format="YYYY-MM-DD HH:mm:ss"
         ),
     }
-    column_order = (
-        "name",
-        "currency.name",
-        "account_type.type",
-        "created_at",
-        "updated_at",
-    )
+    column_order = ("name", "currency.name", "account_type.type")
     disabled: list = ["created_at", "updated_at"]
 
     with st.form("form_edit_accounts"):
@@ -59,7 +54,7 @@ def get_accounts():
         # Submit button
         if st.form_submit_button("Save changes"):
             # Insert new accounts
-            added_accounts: list[dict] = st.session_state["edited_accounts_df"][
+            added_accounts: List[Dict] = st.session_state["edited_accounts_df"][
                 "added_rows"
             ]
             if added_accounts:
@@ -72,7 +67,7 @@ def get_accounts():
                         if new_account["account_type.type"] == account_type["type"]:
                             added_accounts[i]["account_type_id"] = account_type["id"]
                     # api call to add new accounts
-                    payload: dict = {
+                    payload: Dict = {
                         "name": new_account["name"],
                         "account_type_id": new_account["account_type_id"],
                         "currency_id": new_account["currency_id"],
@@ -80,7 +75,7 @@ def get_accounts():
                     requests.post(url=f"{API_URL}/accounts/", json=payload)
 
             # Update accounts
-            updated_accounts: dict = st.session_state["edited_accounts_df"][
+            updated_accounts: Dict = st.session_state["edited_accounts_df"][
                 "edited_rows"
             ]
             if updated_accounts:
@@ -100,7 +95,7 @@ def get_accounts():
                                     "id"
                                 ]
                     # api call to update accounts
-                    payload: dict = {
+                    payload: Dict = {
                         "name": updated_account.get("name", accounts[df_index]["name"]),
                         "currency_id": accounts[df_index]["currency_id"],
                         "account_type_id": accounts[df_index]["account_type_id"],
@@ -126,6 +121,9 @@ def get_accounts():
 def main():
     set_up_page()
     get_accounts()
+    # TODO: Add a form to create new accounts with a better UI
+    # https://docs.streamlit.io/develop/concepts/architecture/forms
+    # https://docs.streamlit.io/develop/api-reference/execution-flow/st.dialog
 
 
 if __name__ == "__main__":

@@ -96,6 +96,7 @@ def create_transactions():
             description="Factored wage",
             account_id=1,
             subcategory_id=1,
+            category_id=1,
         )
         transaction_2 = Transaction(
             id=2,
@@ -103,6 +104,7 @@ def create_transactions():
             description="Rent Torre Cibeles",
             account_id=1,
             subcategory_id=2,
+            category_id=2,
         )
         session.add(transaction_1)
         session.add(transaction_2)
@@ -110,5 +112,4 @@ def create_transactions():
 
 
 def create_monthly_budget():
-    with Session(engine) as session:
-        pass
+    pass

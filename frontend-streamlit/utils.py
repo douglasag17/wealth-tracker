@@ -10,7 +10,7 @@ def set_up_page():
     st.set_page_config(
         page_title=page_title,
         page_icon=page_icon,
-        layout="centered",
+        layout="wide",
         initial_sidebar_state="expanded",
     )
     st.title(f"{page_icon} {page_title}")

@@ -20,7 +20,7 @@ from .models import (
     TransactionPublic,
     TransactionCreate,
     TransactionUpdate,
-    TransactionPublicWithSubcategoryAndAccount,
+    TransactionPublicWithCategorySubcategoryAndAccount,
 )
 
 
@@ -115,7 +115,8 @@ def get_sub_categories(*, session: Session = Depends(get_session)):
 
 
 @app.get(
-    "/transactions/", response_model=list[TransactionPublicWithSubcategoryAndAccount]
+    "/transactions/",
+    response_model=list[TransactionPublicWithCategorySubcategoryAndAccount],
 )
 def get_transactions(*, session: Session = Depends(get_session)):
     transactions = session.exec(select(Transaction)).all()
@@ -135,7 +136,7 @@ def create_transaction(
 
 @app.get(
     "/transactions/{transaction_id}",
-    response_model=TransactionPublicWithSubcategoryAndAccount,
+    response_model=TransactionPublicWithCategorySubcategoryAndAccount,
 )
 def get_transaction(*, session: Session = Depends(get_session), transaction_id: int):
     transaction = session.get(Transaction, transaction_id)
