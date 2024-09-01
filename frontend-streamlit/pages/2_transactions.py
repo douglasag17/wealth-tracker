@@ -54,6 +54,7 @@ def get_transactions():
         "categories_with_subcategories",
         "description",
     )
+    disabled: list = ["created_at", "updated_at"]
 
     with st.form("form_edit_transactions"):
         st.data_editor(
@@ -61,6 +62,7 @@ def get_transactions():
             key="edited_transactions_df",
             column_config=column_config,
             column_order=column_order,
+            disabled=disabled,
             use_container_width=True,
             hide_index=True,
             num_rows="dynamic",
@@ -68,10 +70,22 @@ def get_transactions():
 
         # Submit button
         if st.form_submit_button("Save changes"):
-            pass
+            st.write(st.session_state["edited_transactions_df"])
+            # delete_transactions()
 
             # Refresh app
-            st.rerun()
+            # st.rerun()
+
+
+def delete_transactions():
+    deleted_transactions: List[Dict] = st.session_state["edited_transactions_df"][
+        "deleted_rows"
+    ]
+    if deleted_transactions:
+        for deleted_transaction in deleted_transactions:
+            transaction_id = deleted_transaction["id"]
+            # api call to delete account
+            requests.delete(url=f"{API_URL}/transactions/{transaction_id}/")
 
 
 def main():

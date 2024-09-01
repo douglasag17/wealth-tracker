@@ -47,7 +47,8 @@ def get_accounts():
 
         # Submit button
         if st.form_submit_button("Save changes"):
-            insert_new_accounts(accounts, currencies, account_types)
+            st.write(st.session_state["edited_accounts_df"])
+            insert_new_accounts(currencies, account_types)
             update_accounts(accounts, currencies, account_types)
             delete_accounts(accounts)
 
@@ -55,9 +56,7 @@ def get_accounts():
             st.rerun()
 
 
-def insert_new_accounts(
-    accounts: List[Dict], currencies: List[Dict], account_types: List[Dict]
-):
+def insert_new_accounts(currencies: List[Dict], account_types: List[Dict]):
     added_accounts: List[Dict] = st.session_state["edited_accounts_df"]["added_rows"]
     if added_accounts:
         for i, new_account in enumerate(added_accounts):
