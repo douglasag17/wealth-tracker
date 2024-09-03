@@ -14,7 +14,7 @@ def get_accounts():
     account_types: List[Dict] = requests.get(url=f"{API_URL}/account_types/").json()
 
     # Creating Dataframe
-    accounts_df = pd.json_normalize(accounts)
+    accounts_df: pd.DataFrame = pd.json_normalize(accounts)
 
     # Writing table
     column_config: Dict = {
@@ -100,10 +100,10 @@ def update_accounts(
 
 
 def delete_accounts(accounts: List[Dict]):
-    deleted_accounts: list = st.session_state["edited_accounts_df"]["deleted_rows"]
+    deleted_accounts: List = st.session_state["edited_accounts_df"]["deleted_rows"]
     if deleted_accounts:
         for deleted_account_index in deleted_accounts:
-            account_id = accounts[deleted_account_index]["id"]
+            account_id: str = accounts[deleted_account_index]["id"]
             # api call to delete account
             requests.delete(url=f"{API_URL}/accounts/{account_id}")
 

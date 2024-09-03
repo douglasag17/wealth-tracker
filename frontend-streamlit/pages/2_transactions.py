@@ -3,7 +3,6 @@ import requests
 from utils import set_up_page, API_URL
 import pandas as pd
 from typing import List, Dict
-from datetime import datetime
 
 
 def get_transactions():
@@ -15,7 +14,7 @@ def get_transactions():
     subcategories: List[Dict] = requests.get(url=f"{API_URL}/sub_categories/").json()
 
     # Creating Dataframe
-    transactions_df = pd.json_normalize(transactions)
+    transactions_df: pd.DataFrame = pd.json_normalize(transactions)
     transactions_df["transaction_date"] = pd.to_datetime(
         transactions_df["transaction_date"]
     )
@@ -29,7 +28,8 @@ def get_transactions():
             "Transaction Date",
             format="YYYY-MM-DD HH:mm:ss.SSS",
             required=True,
-            default=datetime.now(),
+            # FIXME: this is not working, it refreshes st.session_state
+            # default=datetime.now(timezone.utc),
         ),
         "account.name": st.column_config.SelectboxColumn(
             "Account",
@@ -70,22 +70,23 @@ def get_transactions():
 
         # Submit button
         if st.form_submit_button("Save changes"):
-            st.write(st.session_state["edited_transactions_df"])
-            # delete_transactions()
+            st.write(st.session_state)
+            delete_transactions(transactions)
 
             # Refresh app
             # st.rerun()
 
 
-def delete_transactions():
-    deleted_transactions: List[Dict] = st.session_state["edited_transactions_df"][
+def delete_transactions(transactions: List[Dict]):
+    deleted_transactions: List = st.session_state["edited_transactions_df"][
         "deleted_rows"
     ]
     if deleted_transactions:
-        for deleted_transaction in deleted_transactions:
-            transaction_id = deleted_transaction["id"]
+        for deleted_transaction_index in deleted_transactions:
+            transaction_id: str = transactions[deleted_transaction_index]["id"]
+
             # api call to delete account
-            requests.delete(url=f"{API_URL}/transactions/{transaction_id}/")
+            requests.delete(url=f"{API_URL}/transactions/{transaction_id}")
 
 
 def main():
