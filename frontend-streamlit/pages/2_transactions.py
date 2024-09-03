@@ -28,24 +28,33 @@ def get_transactions():
             "Transaction Date",
             format="YYYY-MM-DD HH:mm:ss.SSS",
             required=True,
+            help="Select the date and time of the transaction",
             # FIXME: this is not working, it refreshes st.session_state
             # default=datetime.now(timezone.utc),
         ),
         "account.name": st.column_config.SelectboxColumn(
             "Account",
             required=True,
+            help="Select the account where the transaction belongs",
             options=[account["name"] for account in accounts],
         ),
-        "amount": st.column_config.NumberColumn("Amount", required=True),
+        "amount": st.column_config.NumberColumn(
+            "Amount",
+            required=True,
+            help="Add the amount of the transaction. Currency depends on the selected account",
+        ),
         "categories_with_subcategories": st.column_config.SelectboxColumn(
             "Category",
             required=True,
+            help="Select the category and subcategory of the transaction",
             options=[
                 f"{subcategory["category"]["name"]} - {subcategory["name"]}"
                 for subcategory in subcategories
             ],
         ),
-        "description": st.column_config.TextColumn("Description"),
+        "description": st.column_config.TextColumn(
+            "Description", help="Optional - Add a description to the transaction"
+        ),
     }
     column_order = (
         "transaction_date",

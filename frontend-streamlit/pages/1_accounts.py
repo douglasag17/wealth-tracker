@@ -18,15 +18,19 @@ def get_accounts():
 
     # Writing table
     column_config: Dict = {
-        "name": st.column_config.TextColumn("Name", required=True),
+        "name": st.column_config.TextColumn(
+            "Name", required=True, help="Add the name of the account"
+        ),
         "currency.name": st.column_config.SelectboxColumn(
             "Currency",
             required=True,
+            help="Select the currency of the account",
             options=[currency["name"] for currency in currencies],
         ),
         "account_type.type": st.column_config.SelectboxColumn(
             "Type",
             required=True,
+            help="Select the type of the account",
             options=[account_type["type"] for account_type in account_types],
         ),
     }
