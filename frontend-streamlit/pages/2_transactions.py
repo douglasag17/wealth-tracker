@@ -3,6 +3,7 @@ import requests
 from utils import set_up_page, API_URL
 import pandas as pd
 from typing import List, Dict
+from datetime import datetime, date
 
 
 def get_transactions():
@@ -18,8 +19,31 @@ def get_transactions():
     transactions_df["transaction_date"] = pd.to_datetime(
         transactions_df["transaction_date"]
     )
+
+    # Filtering data to show only the transactions within the date range selected
+    date_range_filter: List[date] = st.session_state["date_range_filter"]
+    if len(date_range_filter) == 2:
+        start_date: date = date_range_filter[0]
+        end_date: date = date_range_filter[1]
+        transactions_df = transactions_df[
+            (
+                transactions_df["transaction_date"]
+                >= datetime.combine(start_date, datetime.min.time())
+            )
+            & (
+                transactions_df["transaction_date"]
+                <= datetime.combine(end_date, datetime.max.time())
+            )
+        ]
+
+    # Adding a column with the category and subcategory, this relates to the selectbox
     transactions_df["categories_with_subcategories"] = (
         transactions_df["category.name"] + " - " + transactions_df["subcategory.name"]
+    )
+
+    # Ordering rows in the dataframe
+    transactions_df.sort_values(
+        by=["transaction_date"], inplace=True, ignore_index=True, ascending=False
     )
 
     # Writing table

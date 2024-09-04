@@ -3,6 +3,7 @@ import requests
 from utils import set_up_page, API_URL
 import pandas as pd
 from typing import List, Dict
+from datetime import datetime, date
 
 
 def get_accounts():
@@ -17,16 +18,47 @@ def get_accounts():
     # Creating Dataframe
     accounts_df: pd.DataFrame = pd.json_normalize(accounts)
     transactions_df: pd.DataFrame = pd.json_normalize(transactions)
-
-    # join accounts_df with transactions_df to get the balance of each account
-    accounts_df["balance"] = accounts_df["id"].apply(
-        lambda account_id: transactions_df[transactions_df["account_id"] == account_id][
-            "amount"
-        ]
-        .astype(float)
-        .sum()
+    transactions_df["transaction_date"] = pd.to_datetime(
+        transactions_df["transaction_date"]
     )
-    print(accounts_df["balance"])
+    transactions_df["amount"] = transactions_df["amount"].astype(float)
+
+    # Filtering data to show only the transactions up until the end date selected
+    date_range_filter: List[date] = st.session_state["date_range_filter"]
+    if len(date_range_filter) == 2:
+        end_date: date = date_range_filter[1]
+        transactions_df = transactions_df[
+            transactions_df["transaction_date"]
+            <= datetime.combine(end_date, datetime.max.time())
+        ]
+
+    # join accounts_df with transactions_df to get the total balance of each account, if category is income, add amount, otherwise, subtract amount. If the balance is None, set it to 0
+    accounts_df["balance"] = transactions_df.groupby(
+        by="account_id", group_keys=False
+    ).apply(
+        lambda x: x["amount"].sum()
+        if x["category.name"].iloc[0] == "income"
+        else -x["amount"].sum()
+    )
+    accounts_df["balance"] = accounts_df["balance"].fillna(0)
+
+    # accounts_df = accounts_df.merge(
+    #     transactions_df,
+    #     how="left",
+    #     left_on="id",
+    #     right_on="account_id",
+    #     suffixes=("", "_transaction"),
+    #     validate="one_to_many",
+    # )
+    # accounts_df["balance"] = accounts_df.groupby("id")["amount"].transform("sum")
+    # accounts_df["balance"] = accounts_df["balance"].fillna(0)
+
+    # Ordering rows
+    accounts_df.sort_values(
+        by=["account_type.type", "currency.name", "name"],
+        inplace=True,
+        ignore_index=True,
+    )
 
     # Writing table
     column_config: Dict = {
@@ -45,13 +77,14 @@ def get_accounts():
             help="Select the type of the account",
             options=[account_type["type"] for account_type in account_types],
         ),
-        "balance": st.column_config.TextColumn(
+        "balance": st.column_config.NumberColumn(
             "Current Balance",
             required=False,
+            default=0.0,
             help="Shows the current balance of the account",
         ),
     }
-    column_order = ("name", "currency.name", "account_type.type", "balance")
+    column_order = ("name", "account_type.type", "currency.name", "balance")
     disabled: list = ["created_at", "updated_at", "balance"]
 
     with st.form("form_edit_accounts"):

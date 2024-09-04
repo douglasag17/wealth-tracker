@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, create_engine, Session, select, func
 from .models import Currency, AccountType, Account, Category, SubCategory, Transaction
+from datetime import datetime
 
 
 sqlite_file_name = "database.db"
@@ -92,6 +93,7 @@ def create_transactions():
     with Session(engine) as session:
         transaction_1 = Transaction(
             id=1,
+            transaction_date=datetime(2024, 9, 25, 10, 0, 0, 907160),
             amount=22000000,
             description="Factored wage",
             account_id=1,
@@ -100,7 +102,8 @@ def create_transactions():
         )
         transaction_2 = Transaction(
             id=2,
-            amount=3000000,
+            transaction_date=datetime(2024, 9, 2, 8, 45, 40, 907160),
+            amount=3169120,
             description="Rent Torre Cibeles",
             account_id=1,
             subcategory_id=2,
@@ -108,6 +111,7 @@ def create_transactions():
         )
         transaction_3 = Transaction(
             id=3,
+            transaction_date=datetime(2024, 9, 15, 16, 5, 59, 907160),
             amount=500000,
             description="La Vaquita",
             account_id=2,
@@ -116,7 +120,8 @@ def create_transactions():
         )
         transaction_4 = Transaction(
             id=4,
-            amount=200000,
+            transaction_date=datetime(2024, 8, 21, 22, 9, 40, 907160),
+            amount=201700,
             description="Casa Blanca",
             account_id=2,
             subcategory_id=4,
