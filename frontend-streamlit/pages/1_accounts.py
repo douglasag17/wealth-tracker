@@ -12,9 +12,21 @@ def get_accounts():
     accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
     currencies: List[Dict] = requests.get(url=f"{API_URL}/currencies/").json()
     account_types: List[Dict] = requests.get(url=f"{API_URL}/account_types/").json()
+    transactions: List[Dict] = requests.get(url=f"{API_URL}/transactions/").json()
 
     # Creating Dataframe
     accounts_df: pd.DataFrame = pd.json_normalize(accounts)
+    transactions_df: pd.DataFrame = pd.json_normalize(transactions)
+
+    # join accounts_df with transactions_df to get the balance of each account
+    accounts_df["balance"] = accounts_df["id"].apply(
+        lambda account_id: transactions_df[transactions_df["account_id"] == account_id][
+            "amount"
+        ]
+        .astype(float)
+        .sum()
+    )
+    print(accounts_df["balance"])
 
     # Writing table
     column_config: Dict = {
@@ -33,9 +45,14 @@ def get_accounts():
             help="Select the type of the account",
             options=[account_type["type"] for account_type in account_types],
         ),
+        "balance": st.column_config.TextColumn(
+            "Current Balance",
+            required=False,
+            help="Shows the current balance of the account",
+        ),
     }
-    column_order = ("name", "currency.name", "account_type.type")
-    disabled: list = ["created_at", "updated_at"]
+    column_order = ("name", "currency.name", "account_type.type", "balance")
+    disabled: list = ["created_at", "updated_at", "balance"]
 
     with st.form("form_edit_accounts"):
         st.data_editor(

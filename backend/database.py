@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, create_engine, Session
+from sqlmodel import SQLModel, create_engine, Session, select, func
 from .models import Currency, AccountType, Account, Category, SubCategory, Transaction
 
 
@@ -106,10 +106,35 @@ def create_transactions():
             subcategory_id=2,
             category_id=2,
         )
+        transaction_3 = Transaction(
+            id=3,
+            amount=500000,
+            description="La Vaquita",
+            account_id=2,
+            subcategory_id=3,
+            category_id=3,
+        )
+        transaction_4 = Transaction(
+            id=4,
+            amount=200000,
+            description="Casa Blanca",
+            account_id=2,
+            subcategory_id=4,
+            category_id=3,
+        )
         session.add(transaction_1)
         session.add(transaction_2)
+        session.add(transaction_3)
+        session.add(transaction_4)
         session.commit()
 
 
 def create_monthly_budget():
-    pass
+    with Session(engine) as session:
+        statement = (
+            select(func.coalesce(func.sum(Transaction.amount), 0))
+            .where(Transaction.account_id == Account.id)
+            .correlate_except(Transaction)
+        )
+        results = session.exec(statement).all()
+        print(results)

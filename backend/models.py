@@ -44,7 +44,6 @@ class AccountBase(SQLModel):
     )
 
     currency_id: int = Field(default=None, foreign_key="currency.id")
-
     account_type_id: int = Field(default=None, foreign_key="accounttype.id")
 
 
@@ -68,11 +67,6 @@ class AccountUpdate(SQLModel):
     name: str | None = None
     currency_id: int | None = None
     account_type_id: int | None = None
-
-
-class AccountPublicWithTypeAndCurrency(AccountPublic):
-    currency: CurrencyPublic | None = None
-    account_type: AccountTypePublic | None = None
 
 
 # Category Model
@@ -108,14 +102,6 @@ class SubCategory(SubCategoryBase, table=True):
 
 class SubCategoryPublic(SubCategoryBase):
     id: int
-
-
-class CategoryPublicWithSubcategories(CategoryPublic):
-    subcategories: List[SubCategoryPublic] = []
-
-
-class SubCategoryPublicWithCategory(SubCategoryPublic):
-    category: CategoryPublic | None = None
 
 
 # Transaction Model
@@ -164,12 +150,6 @@ class TransactionUpdate(SQLModel):
     account_id: int | None = None
 
 
-class TransactionPublicWithCategorySubcategoryAndAccount(TransactionPublic):
-    category: CategoryPublic | None = None
-    subcategory: SubCategoryPublic | None = None
-    account: AccountPublic | None = None
-
-
 # MonthlyBudget Model
 # class MonthlyBudget(SQLModel, table=True):
 #     id: int | None = Field(default=None, primary_key=True)
@@ -177,3 +157,29 @@ class TransactionPublicWithCategorySubcategoryAndAccount(TransactionPublic):
 #     year: int  # TODO:
 #     month: int  # TODO:
 #     budgeted: Decimal  # TODO:
+
+
+# Models joined with other models
+class CategoryPublicWithSubcategories(CategoryPublic):
+    subcategories: List[SubCategoryPublic] = []
+
+
+class SubCategoryPublicWithCategory(SubCategoryPublic):
+    category: CategoryPublic | None = None
+
+
+class AccountPublicWithTypeAndCurrency(AccountPublic):
+    currency: CurrencyPublic | None = None
+    account_type: AccountTypePublic | None = None
+
+    # # Add computed field that calculates the total balance of the account
+    # @computed_field
+    # @property
+    # def total_balance(self) -> Decimal:
+    #     return select(func.sum(Transaction.amount))
+
+
+class TransactionPublicWithCategorySubcategoryAndAccount(TransactionPublic):
+    category: CategoryPublic | None = None
+    subcategory: SubCategoryPublic | None = None
+    account: AccountPublic | None = None
