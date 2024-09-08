@@ -18,7 +18,6 @@ def get_transactions():
 
     # Creating Dataframe
     transactions_df: pd.DataFrame = pd.json_normalize(transactions)
-
     transactions_df["transaction_date"] = pd.to_datetime(
         transactions_df["transaction_date"]
     )
@@ -95,7 +94,7 @@ def get_transactions():
             column_order=column_order,
             disabled=disabled,
             use_container_width=True,
-            hide_index=False,
+            hide_index=True,
             num_rows="dynamic",
         )
 
@@ -103,11 +102,15 @@ def get_transactions():
         if st.form_submit_button("Save changes"):
             st.write(st.session_state)
             delete_transactions(transactions)
-            insert_new_transactions(accounts, categories, subcategories)
-            update_transactions(transactions, accounts, categories, subcategories)
+            insert_new_transactions(
+                accounts, categories, subcategories
+            )  # FIXME: It is requesting and ID input
+            update_transactions(
+                transactions, accounts, categories, subcategories
+            )  # FIXME: This is not working properly becuase of the index
 
             # Refresh app
-            st.rerun()
+            # st.rerun()
 
 
 def delete_transactions(transactions: List[Dict]):
@@ -119,7 +122,8 @@ def delete_transactions(transactions: List[Dict]):
             transaction_id: str = transactions[deleted_transaction_index]["id"]
 
             # api call to delete account
-            requests.delete(url=f"{API_URL}/transactions/{transaction_id}")
+            response = requests.delete(url=f"{API_URL}/transactions/{transaction_id}")
+            st.write(response)
 
 
 def insert_new_transactions(
@@ -162,7 +166,9 @@ def insert_new_transactions(
                 "subcategory_id": new_transaction["subcategory_id"],
                 "description": new_transaction.get("description", ""),
             }
-            requests.post(url=f"{API_URL}/transactions/", json=payload)
+            st.write(payload)
+            response = requests.post(url=f"{API_URL}/transactions/", json=payload)
+            st.write(response)
 
 
 def update_transactions(
@@ -215,7 +221,7 @@ def update_transactions(
                 ),
             }
             transaction_id = transactions[df_index]["id"]
-            st.write(payload, transaction_id)
+            st.write(payload)
             response = requests.patch(
                 url=f"{API_URL}/transactions/{transaction_id}", json=payload
             )
