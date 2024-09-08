@@ -47,12 +47,12 @@ def get_accounts():
     accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
 
     # Ordering rows
-    accounts_df.sort_values(
-        by=["balance", "name"],
-        ascending=[False, True],
-        inplace=True,
-        ignore_index=True,
-    )
+    # accounts_df.sort_values(
+    #     by=["balance", "name"],
+    #     ascending=[False, True],
+    #     inplace=True,
+    #     ignore_index=True,
+    # )
 
     # Writing table
     column_config: Dict = {
@@ -95,7 +95,6 @@ def get_accounts():
 
         # Submit button
         if st.form_submit_button("Save changes"):
-            st.write(st.session_state["edited_accounts_df"])
             insert_new_accounts(currencies, account_types)
             update_accounts(accounts, currencies, account_types)
             delete_accounts(accounts)
@@ -110,10 +109,10 @@ def insert_new_accounts(currencies: List[Dict], account_types: List[Dict]):
         for i, new_account in enumerate(added_accounts):
             for currency in currencies:
                 if new_account["currency.name"] == currency["name"]:
-                    added_accounts[i]["currency_id"] = currency["id"]
+                    new_account["currency_id"] = currency["id"]
             for account_type in account_types:
                 if new_account["account_type.type"] == account_type["type"]:
-                    added_accounts[i]["account_type_id"] = account_type["id"]
+                    new_account["account_type_id"] = account_type["id"]
             # api call to add new accounts
             payload: Dict = {
                 "name": new_account["name"],

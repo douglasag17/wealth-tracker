@@ -107,7 +107,7 @@ class SubCategoryPublic(SubCategoryBase):
 # Transaction Model
 class TransactionBase(SQLModel):
     amount: Decimal = Field(default=0, max_digits=50, decimal_places=2, nullable=False)
-    description: str = Field(nullable=False)
+    description: str = Field(default="", nullable=False)
     transaction_date: datetime | None = Field(
         default_factory=datetime.utcnow, nullable=False
     )
@@ -146,6 +146,7 @@ class TransactionUpdate(SQLModel):
     transaction_date: datetime | None = None
     is_planned: bool | None = None
     is_paid: bool | None = None
+    category_id: int | None = None
     subcategory_id: int | None = None
     account_id: int | None = None
 
