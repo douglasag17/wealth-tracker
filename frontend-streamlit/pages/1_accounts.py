@@ -10,6 +10,7 @@ def get_accounts():
     st.subheader("Accounts")
 
     # Getting data from API
+    # FIXME: Add support for filtering by date to API
     accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
     currencies: List[Dict] = requests.get(url=f"{API_URL}/currencies/").json()
     account_types: List[Dict] = requests.get(url=f"{API_URL}/account_types/").json()
@@ -32,30 +33,23 @@ def get_accounts():
             <= datetime.combine(end_date, datetime.max.time())
         ]
 
-    # join accounts_df with transactions_df to get the total balance of each account, if category is income, add amount, otherwise, subtract amount. If the balance is None, set it to 0
-    accounts_df["balance"] = transactions_df.groupby(
-        by="account_id", group_keys=False
-    ).apply(
-        lambda x: x["amount"].sum()
-        if x["category.name"].iloc[0] == "income"
-        else -x["amount"].sum()
-    )
-    accounts_df["balance"] = accounts_df["balance"].fillna(0)
+    # calculate the balance of each account
+    # if category is income, add amount, otherwise, subtract amount. If the balance is None, set it to 0
+    # Example: account_id = 1 -> (-3169120) + (+22000000) = 18830880
 
-    # accounts_df = accounts_df.merge(
-    #     transactions_df,
-    #     how="left",
-    #     left_on="id",
-    #     right_on="account_id",
-    #     suffixes=("", "_transaction"),
-    #     validate="one_to_many",
-    # )
-    # accounts_df["balance"] = accounts_df.groupby("id")["amount"].transform("sum")
-    # accounts_df["balance"] = accounts_df["balance"].fillna(0)
+    transactions_df["amount_with_sign"] = transactions_df.apply(
+        lambda x: x["amount"] if x["category.type"] == "income" else -x["amount"],
+        axis=1,
+    )
+    transactions_aggregated: pd.DataFrame = transactions_df.groupby("account_id")[
+        "amount_with_sign"
+    ].sum()
+    accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
 
     # Ordering rows
     accounts_df.sort_values(
-        by=["account_type.type", "currency.name", "name"],
+        by=["balance", "name"],
+        ascending=[False, True],
         inplace=True,
         ignore_index=True,
     )

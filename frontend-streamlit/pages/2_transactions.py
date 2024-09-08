@@ -10,6 +10,7 @@ def get_transactions():
     st.subheader("Transactions")
 
     # Getting data from API
+    # FIXME: Add support for filtering by date to API
     transactions: List[Dict] = requests.get(url=f"{API_URL}/transactions/").json()
     accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
     subcategories: List[Dict] = requests.get(url=f"{API_URL}/sub_categories/").json()
