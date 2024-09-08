@@ -46,14 +46,6 @@ def get_accounts():
     ].sum()
     accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
 
-    # Ordering rows
-    # accounts_df.sort_values(
-    #     by=["balance", "name"],
-    #     ascending=[False, True],
-    #     inplace=True,
-    #     ignore_index=True,
-    # )
-
     # Writing table
     column_config: Dict = {
         "name": st.column_config.TextColumn(

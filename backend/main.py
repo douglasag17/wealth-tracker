@@ -22,6 +22,7 @@ from .models import (
     TransactionUpdate,
     TransactionPublicWithCategorySubcategoryAndAccount,
 )
+from typing import List
 
 
 @asynccontextmanager
@@ -52,7 +53,8 @@ def create_account(*, session: Session = Depends(get_session), account: AccountC
 
 @app.get("/accounts/", response_model=list[AccountPublicWithTypeAndCurrency])
 def get_accounts(*, session: Session = Depends(get_session)):
-    accounts = session.exec(select(Account)).all()
+    accounts: List[Account] = session.exec(select(Account)).all()
+    accounts: List[Account] = sorted(accounts, key=lambda x: (x.created_at))
     return accounts
 
 
@@ -119,7 +121,10 @@ def get_sub_categories(*, session: Session = Depends(get_session)):
     response_model=list[TransactionPublicWithCategorySubcategoryAndAccount],
 )
 def get_transactions(*, session: Session = Depends(get_session)):
-    transactions = session.exec(select(Transaction)).all()
+    transactions: List[Transaction] = session.exec(select(Transaction)).all()
+    transactions: List[Transaction] = sorted(
+        transactions, key=lambda x: x.transaction_date
+    )
     return transactions
 
 

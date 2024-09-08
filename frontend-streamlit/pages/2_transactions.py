@@ -44,11 +44,6 @@ def get_transactions():
         transactions_df["category.name"] + " - " + transactions_df["subcategory.name"]
     )
 
-    # Ordering rows in the dataframe
-    # transactions_df.sort_values(
-    #     by=["transaction_date"], inplace=True, ignore_index=True, ascending=False
-    # )
-
     # Writing table
     column_config: Dict = {
         "transaction_date": st.column_config.DatetimeColumn(

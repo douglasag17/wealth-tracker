@@ -173,12 +173,6 @@ class AccountPublicWithTypeAndCurrency(AccountPublic):
     currency: CurrencyPublic | None = None
     account_type: AccountTypePublic | None = None
 
-    # # Add computed field that calculates the total balance of the account
-    # @computed_field
-    # @property
-    # def total_balance(self) -> Decimal:
-    #     return select(func.sum(Transaction.amount))
-
 
 class TransactionPublicWithCategorySubcategoryAndAccount(TransactionPublic):
     category: CategoryPublic | None = None
