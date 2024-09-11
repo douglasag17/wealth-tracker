@@ -36,11 +36,21 @@ def get_transactions():
     transactions_df["transaction_date"] = pd.to_datetime(
         transactions_df["transaction_date"]
     )
+    transactions_df["amount"] = transactions_df["amount"].astype(float)
 
     # Adding a column with the category and subcategory, this relates to the selectbox
     transactions_df["categories_with_subcategories"] = (
         transactions_df["category.name"] + " - " + transactions_df["subcategory.name"]
     )
+
+    # Adding a column with cumulative sum of the amount per account
+    transactions_df["amount_with_sign"] = transactions_df.apply(
+        lambda x: x["amount"] if x["category.type"] == "income" else -x["amount"],
+        axis=1,
+    )
+    transactions_df["running_balance"] = transactions_df.groupby("account_id")[
+        "amount_with_sign"
+    ].cumsum()
 
     # Writing table
     column_config: Dict = {
@@ -75,6 +85,12 @@ def get_transactions():
         "description": st.column_config.TextColumn(
             "Description", help="Optional - Add a description to the transaction"
         ),
+        "running_balance": st.column_config.NumberColumn(
+            "Running Balance",
+            required=False,
+            default=0.0,
+            help="This is the cumulative sum of the amount",
+        ),
     }
     column_order = (
         "transaction_date",
@@ -82,8 +98,9 @@ def get_transactions():
         "amount",
         "categories_with_subcategories",
         "description",
+        "running_balance",
     )
-    disabled: list = ["created_at", "updated_at"]
+    disabled: list = ["created_at", "updated_at", "running_balance"]
 
     with st.form("form_edit_transactions"):
         st.data_editor(

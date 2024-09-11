@@ -139,7 +139,7 @@ def get_transactions(
             select(Transaction).where(Transaction.transaction_date <= end_date)
         ).all()
     transactions: List[Transaction] = sorted(
-        transactions, key=lambda x: x.transaction_date, reverse=True
+        transactions, key=lambda x: x.transaction_date
     )
     return transactions
 
