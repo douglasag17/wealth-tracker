@@ -6,6 +6,65 @@ from typing import List, Dict
 from datetime import datetime, date
 
 
+def add_a_transaction():
+    st.subheader("Add a new transaction")
+    with st.form("form_add_transaction"):
+        transaction_date: datetime = st.date_input(
+            "Transaction Date",
+            value=datetime.now(),
+            format="YYYY-MM-DD",
+            help="Select the date and time of the transaction",
+        )
+        accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
+        account_name: str = st.selectbox(
+            "Account",
+            options=[account["name"] for account in accounts],
+            help="Select the account where the transaction belongs",
+        )
+        amount: float = st.number_input(
+            "Amount",
+            help="Add the amount of the transaction. Currency depends on the selected account",
+        )
+        categories: List[Dict] = requests.get(url=f"{API_URL}/categories/").json()
+        subcategories: List[Dict] = requests.get(
+            url=f"{API_URL}/sub_categories/"
+        ).json()
+        category: str = st.selectbox(
+            "Category",
+            options=[
+                f"{subcategory['category']['name']} - {subcategory['name']}"
+                for subcategory in subcategories
+            ],
+            help="Select the category and subcategory of the transaction",
+        )
+        description: str = st.text_input(
+            "Description", help="Optional - Add a description to the transaction"
+        )
+
+        if st.form_submit_button("Add transaction"):
+            new_category: str = category.split(" - ")[0]
+            new_subcategory: str = category.split(" - ")[1]
+            for account in accounts:
+                if account_name == account["name"]:
+                    account_id: int = account["id"]
+            for category in categories:
+                if new_category == category["name"]:
+                    category_id: int = category["id"]
+            for subcategory in subcategories:
+                if new_subcategory == subcategory["name"]:
+                    subcategory_id: int = subcategory["id"]
+
+            payload: Dict = {
+                "transaction_date": transaction_date.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "account_id": account_id,
+                "amount": amount,
+                "category_id": category_id,
+                "subcategory_id": subcategory_id,
+                "description": description,
+            }
+            requests.post(url=f"{API_URL}/transactions/", json=payload)
+
+
 def get_transactions():
     st.subheader("Transactions")
 
@@ -116,7 +175,6 @@ def get_transactions():
 
         # Submit button
         if st.form_submit_button("Save changes"):
-            st.write(st.session_state)
             delete_transactions(transactions)
             insert_new_transactions(accounts, categories, subcategories)
             update_transactions(transactions, accounts, categories, subcategories)
@@ -134,8 +192,7 @@ def delete_transactions(transactions: List[Dict]):
             transaction_id: str = transactions[deleted_transaction_index]["id"]
 
             # api call to delete account
-            response = requests.delete(url=f"{API_URL}/transactions/{transaction_id}")
-            st.write(response)
+            requests.delete(url=f"{API_URL}/transactions/{transaction_id}")
 
 
 def insert_new_transactions(
@@ -164,7 +221,6 @@ def insert_new_transactions(
                     new_transaction["subcategory_id"] = subcategory["id"]
 
             # api call to add new transactions
-            st.write(new_transaction["transaction_date"])
             new_transaction_date: datetime = datetime.strptime(
                 new_transaction["transaction_date"], "%Y-%m-%dT%H:%M:%S.%f"
             )
@@ -178,9 +234,7 @@ def insert_new_transactions(
                 "subcategory_id": new_transaction["subcategory_id"],
                 "description": new_transaction.get("description", ""),
             }
-            st.write(payload)
-            response = requests.post(url=f"{API_URL}/transactions/", json=payload)
-            st.write(response)
+            requests.post(url=f"{API_URL}/transactions/", json=payload)
 
 
 def update_transactions(
@@ -233,16 +287,12 @@ def update_transactions(
                 ),
             }
             transaction_id = transactions[df_index]["id"]
-            st.write(payload)
-            response = requests.patch(
-                url=f"{API_URL}/transactions/{transaction_id}", json=payload
-            )
-            st.write(response)
+            requests.patch(url=f"{API_URL}/transactions/{transaction_id}", json=payload)
 
 
 def main():
     set_up_page()
-    # add form to add a transaction
+    add_a_transaction()
     get_transactions()
     # TODO: Add a form to create new accounts with a better UI
     # https://docs.streamlit.io/develop/concepts/architecture/forms

@@ -10,7 +10,6 @@ def get_accounts():
     st.subheader("Accounts")
 
     # Filtering data to show only the transactions up until the end date selected
-    st.write("Select the end date to filter the transactions")
     date_range_filter: List[date] = st.session_state["date_range_filter"]
     end_date: str = ""
     if len(date_range_filter) == 2:
@@ -49,6 +48,11 @@ def get_accounts():
         "amount_with_sign"
     ].sum()
     accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
+
+    # Adding Metrics
+    col1, col2 = st.columns(2)
+    col1.metric("Total Balance", "70 °F", "1.2 °F")
+    col2.metric("Total Credit", "9 mph", "-8%")
 
     # Writing table
     column_config: Dict = {
