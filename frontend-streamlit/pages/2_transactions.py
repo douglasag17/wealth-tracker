@@ -1,9 +1,14 @@
 import streamlit as st
 import requests
-from utils import set_up_page, API_URL
 import pandas as pd
 from typing import List, Dict
-from datetime import datetime, date
+from datetime import datetime
+from utils import (
+    set_up_page,
+    get_data_from_api,
+    get_dataframes,
+    API_URL,
+)
 
 
 def add_a_transaction():
@@ -65,51 +70,17 @@ def add_a_transaction():
             requests.post(url=f"{API_URL}/transactions/", json=payload)
 
 
-def get_transactions():
+def get_transactions(
+    api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataFrame]
+):
     st.subheader("Transactions")
 
-    # Filtering data to show only the transactions within the date range selected
-    date_range_filter: List[date] = st.session_state["date_range_filter"]
-    start_date: str = ""
-    end_date: str = ""
-    if len(date_range_filter) == 2:
-        start_date = date_range_filter[0].strftime("%Y-%m-%d")
-        end_date = date_range_filter[1].strftime("%Y-%m-%d")
-
-    # Getting data from API
-    transactions: List[Dict] = []
-    if start_date != "" and end_date != "":
-        transactions = requests.get(
-            url=f"{API_URL}/transactions/?start_date={start_date}&end_date={end_date}"
-        ).json()
-    elif len(transactions) == 0:
-        st.warning("Select a complete date range", icon="⚠️")
-        st.stop()
-
-    accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
-    categories: List[Dict] = requests.get(url=f"{API_URL}/categories/").json()
-    subcategories: List[Dict] = requests.get(url=f"{API_URL}/sub_categories/").json()
-
-    # Creating Dataframe
-    transactions_df: pd.DataFrame = pd.json_normalize(transactions)
-    transactions_df["transaction_date"] = pd.to_datetime(
-        transactions_df["transaction_date"]
-    )
-    transactions_df["amount"] = transactions_df["amount"].astype(float)
-
-    # Adding a column with the category and subcategory, this relates to the selectbox
-    transactions_df["categories_with_subcategories"] = (
-        transactions_df["category.name"] + " - " + transactions_df["subcategory.name"]
-    )
-
-    # Adding a column with cumulative sum of the amount per account
-    transactions_df["amount_with_sign"] = transactions_df.apply(
-        lambda x: x["amount"] if x["category.type"] == "income" else -x["amount"],
-        axis=1,
-    )
-    transactions_df["running_balance"] = transactions_df.groupby("account_id")[
-        "amount_with_sign"
-    ].cumsum()
+    # Getting data
+    transactions: List[Dict] = api_data["transactions_between_date_range"]
+    accounts: List[Dict] = api_data["accounts"]
+    categories: List[Dict] = api_data["categories"]
+    subcategories: List[Dict] = api_data["subcategories"]
+    transactions_df: pd.DataFrame = dataframes["transactions_between_date_range_df"]
 
     # Writing table
     column_config: Dict = {
@@ -159,7 +130,7 @@ def get_transactions():
         "description",
         "running_balance",
     )
-    disabled: list = ["created_at", "updated_at", "running_balance"]
+    disabled: List = ["created_at", "updated_at", "running_balance"]
 
     with st.form("form_edit_transactions"):
         st.data_editor(
@@ -292,8 +263,13 @@ def update_transactions(
 
 def main():
     set_up_page()
-    add_a_transaction()
-    get_transactions()
+
+    # Getting data from API
+    api_data: Dict[str, List[Dict]] = get_data_from_api()
+    dataframes: Dict[str, pd.DataFrame] = get_dataframes(api_data)
+
+    # add_a_transaction()
+    get_transactions(api_data=api_data, dataframes=dataframes)
     # TODO: Add a form to create new accounts with a better UI
     # https://docs.streamlit.io/develop/concepts/architecture/forms
     # https://docs.streamlit.io/develop/api-reference/execution-flow/st.dialog

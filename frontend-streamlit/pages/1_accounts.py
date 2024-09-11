@@ -1,53 +1,23 @@
 import streamlit as st
 import requests
-from utils import set_up_page, API_URL
 import pandas as pd
 from typing import List, Dict
-from datetime import date
+from utils import (
+    set_up_page,
+    get_data_from_api,
+    get_dataframes,
+    API_URL,
+)
 
 
-def get_accounts():
+def get_accounts(api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataFrame]):
     st.subheader("Accounts")
 
-    # Filtering data to show only the transactions up until the end date selected
-    date_range_filter: List[date] = st.session_state["date_range_filter"]
-    end_date: str = ""
-    if len(date_range_filter) == 2:
-        end_date = date_range_filter[1].strftime("%Y-%m-%d")
-
-    # Getting data from API
-    transactions: List[Dict] = []
-    if end_date != "":
-        transactions = requests.get(
-            url=f"{API_URL}/transactions/?end_date={end_date}"
-        ).json()
-    elif len(transactions) == 0:
-        st.warning("Select a complete date range", icon="⚠️")
-        st.stop()
-
-    accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
-    currencies: List[Dict] = requests.get(url=f"{API_URL}/currencies/").json()
-    account_types: List[Dict] = requests.get(url=f"{API_URL}/account_types/").json()
-
-    # Creating Dataframe
-    accounts_df: pd.DataFrame = pd.json_normalize(accounts)
-    transactions_df: pd.DataFrame = pd.json_normalize(transactions)
-    transactions_df["transaction_date"] = pd.to_datetime(
-        transactions_df["transaction_date"]
-    )
-    transactions_df["amount"] = transactions_df["amount"].astype(float)
-
-    # calculate the balance of each account
-    # if category is income, add amount, otherwise, subtract amount. If the balance is None, set it to 0
-    # Example: account_id = 1 -> (-3169120) + (+22000000) = 18830880
-    transactions_df["amount_with_sign"] = transactions_df.apply(
-        lambda x: x["amount"] if x["category.type"] == "income" else -x["amount"],
-        axis=1,
-    )
-    transactions_aggregated: pd.DataFrame = transactions_df.groupby("account_id")[
-        "amount_with_sign"
-    ].sum()
-    accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
+    # Getting data
+    accounts: List[Dict] = api_data["accounts"]
+    currencies: List[Dict] = api_data["currencies"]
+    account_types: List[Dict] = api_data["account_types"]
+    accounts_df: pd.DataFrame = dataframes["accounts_df"]
 
     # Adding Metrics
     col1, col2 = st.columns(2)
@@ -79,7 +49,7 @@ def get_accounts():
         ),
     }
     column_order = ("name", "account_type.type", "currency.name", "balance")
-    disabled: list = ["created_at", "updated_at", "balance"]
+    disabled: List = ["created_at", "updated_at", "balance"]
 
     with st.form("form_edit_accounts"):
         st.data_editor(
@@ -157,7 +127,14 @@ def delete_accounts(accounts: List[Dict]):
 
 def main():
     set_up_page()
-    get_accounts()
+
+    # Getting data from API
+    api_data: Dict[str, List[Dict]] = get_data_from_api()
+    dataframes: Dict[str, pd.DataFrame] = get_dataframes(api_data)
+
+    # Get accounts data_editor form
+    get_accounts(api_data=api_data, dataframes=dataframes)
+
     # TODO: Add a form to create new accounts with a better UI
     # https://docs.streamlit.io/develop/concepts/architecture/forms
     # https://docs.streamlit.io/develop/api-reference/execution-flow/st.dialog
