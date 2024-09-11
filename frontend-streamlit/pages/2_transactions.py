@@ -9,9 +9,24 @@ from datetime import datetime, date
 def get_transactions():
     st.subheader("Transactions")
 
+    # Filtering data to show only the transactions within the date range selected
+    date_range_filter: List[date] = st.session_state["date_range_filter"]
+    start_date: str = ""
+    end_date: str = ""
+    if len(date_range_filter) == 2:
+        start_date = date_range_filter[0].strftime("%Y-%m-%d")
+        end_date = date_range_filter[1].strftime("%Y-%m-%d")
+
     # Getting data from API
-    # FIXME: Add support for filtering by date to API
-    transactions: List[Dict] = requests.get(url=f"{API_URL}/transactions/").json()
+    transactions: List[Dict] = []
+    if start_date != "" and end_date != "":
+        transactions = requests.get(
+            url=f"{API_URL}/transactions/?start_date={start_date}&end_date={end_date}"
+        ).json()
+    elif len(transactions) == 0:
+        st.warning("Select a complete date range", icon="⚠️")
+        st.stop()
+
     accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
     categories: List[Dict] = requests.get(url=f"{API_URL}/categories/").json()
     subcategories: List[Dict] = requests.get(url=f"{API_URL}/sub_categories/").json()
@@ -21,22 +36,6 @@ def get_transactions():
     transactions_df["transaction_date"] = pd.to_datetime(
         transactions_df["transaction_date"]
     )
-
-    # Filtering data to show only the transactions within the date range selected
-    date_range_filter: List[date] = st.session_state["date_range_filter"]
-    if len(date_range_filter) == 2:
-        start_date: date = date_range_filter[0]
-        end_date: date = date_range_filter[1]
-        transactions_df = transactions_df[
-            (
-                transactions_df["transaction_date"]
-                >= datetime.combine(start_date, datetime.min.time())
-            )
-            & (
-                transactions_df["transaction_date"]
-                <= datetime.combine(end_date, datetime.max.time())
-            )
-        ]
 
     # Adding a column with the category and subcategory, this relates to the selectbox
     transactions_df["categories_with_subcategories"] = (
@@ -102,15 +101,11 @@ def get_transactions():
         if st.form_submit_button("Save changes"):
             st.write(st.session_state)
             delete_transactions(transactions)
-            insert_new_transactions(
-                accounts, categories, subcategories
-            )  # FIXME: It is requesting and ID input
-            update_transactions(
-                transactions, accounts, categories, subcategories
-            )  # FIXME: This is not working properly becuase of the index
+            insert_new_transactions(accounts, categories, subcategories)
+            update_transactions(transactions, accounts, categories, subcategories)
 
             # Refresh app
-            # st.rerun()
+            st.rerun()
 
 
 def delete_transactions(transactions: List[Dict]):

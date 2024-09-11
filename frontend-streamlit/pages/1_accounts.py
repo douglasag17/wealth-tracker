@@ -3,18 +3,32 @@ import requests
 from utils import set_up_page, API_URL
 import pandas as pd
 from typing import List, Dict
-from datetime import datetime, date
+from datetime import date
 
 
 def get_accounts():
     st.subheader("Accounts")
 
+    # Filtering data to show only the transactions up until the end date selected
+    st.write("Select the end date to filter the transactions")
+    date_range_filter: List[date] = st.session_state["date_range_filter"]
+    end_date: str = ""
+    if len(date_range_filter) == 2:
+        end_date = date_range_filter[1].strftime("%Y-%m-%d")
+
     # Getting data from API
-    # FIXME: Add support for filtering by date to API
+    transactions: List[Dict] = []
+    if end_date != "":
+        transactions = requests.get(
+            url=f"{API_URL}/transactions/?end_date={end_date}"
+        ).json()
+    elif len(transactions) == 0:
+        st.warning("Select a complete date range", icon="⚠️")
+        st.stop()
+
     accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
     currencies: List[Dict] = requests.get(url=f"{API_URL}/currencies/").json()
     account_types: List[Dict] = requests.get(url=f"{API_URL}/account_types/").json()
-    transactions: List[Dict] = requests.get(url=f"{API_URL}/transactions/").json()
 
     # Creating Dataframe
     accounts_df: pd.DataFrame = pd.json_normalize(accounts)
@@ -24,19 +38,9 @@ def get_accounts():
     )
     transactions_df["amount"] = transactions_df["amount"].astype(float)
 
-    # Filtering data to show only the transactions up until the end date selected
-    date_range_filter: List[date] = st.session_state["date_range_filter"]
-    if len(date_range_filter) == 2:
-        end_date: date = date_range_filter[1]
-        transactions_df = transactions_df[
-            transactions_df["transaction_date"]
-            <= datetime.combine(end_date, datetime.max.time())
-        ]
-
     # calculate the balance of each account
     # if category is income, add amount, otherwise, subtract amount. If the balance is None, set it to 0
     # Example: account_id = 1 -> (-3169120) + (+22000000) = 18830880
-
     transactions_df["amount_with_sign"] = transactions_df.apply(
         lambda x: x["amount"] if x["category.type"] == "income" else -x["amount"],
         axis=1,

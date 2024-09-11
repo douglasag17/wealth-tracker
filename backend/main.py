@@ -22,7 +22,8 @@ from .models import (
     TransactionUpdate,
     TransactionPublicWithCategorySubcategoryAndAccount,
 )
-from typing import List
+from typing import List, Optional
+from datetime import date, timedelta
 
 
 @asynccontextmanager
@@ -120,10 +121,25 @@ def get_sub_categories(*, session: Session = Depends(get_session)):
     "/transactions/",
     response_model=list[TransactionPublicWithCategorySubcategoryAndAccount],
 )
-def get_transactions(*, session: Session = Depends(get_session)):
-    transactions: List[Transaction] = session.exec(select(Transaction)).all()
+def get_transactions(
+    *,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = date(date.today().year, date.today().month + 1, 1)
+    - timedelta(days=1),
+    session: Session = Depends(get_session),
+):
+    if start_date:
+        transactions: List[Transaction] = session.exec(
+            select(Transaction)
+            .where(Transaction.transaction_date >= start_date)
+            .where(Transaction.transaction_date <= end_date)
+        ).all()
+    else:
+        transactions: List[Transaction] = session.exec(
+            select(Transaction).where(Transaction.transaction_date <= end_date)
+        ).all()
     transactions: List[Transaction] = sorted(
-        transactions, key=lambda x: x.transaction_date
+        transactions, key=lambda x: x.transaction_date, reverse=True
     )
     return transactions
 
