@@ -75,8 +75,6 @@ def add_a_transaction(api_data: Dict[str, List[Dict]]):
 def get_transactions(
     api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataFrame]
 ):
-    st.subheader("Transactions")
-
     # Getting data
     transactions: List[Dict] = api_data["transactions_between_date_range"]
     accounts: List[Dict] = api_data["accounts"]
@@ -266,6 +264,8 @@ def update_transactions(
 
 def main():
     set_up_page()
+
+    st.header("Transactions")
 
     # Getting data from API
     api_data: Dict[str, List[Dict]] = get_data_from_api()

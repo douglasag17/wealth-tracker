@@ -6,6 +6,7 @@ import pandas as pd
 
 
 API_URL: str = "http://127.0.0.1:8000"
+EXCHANGE_RATE_COP_USD: float = 4000
 
 
 def set_up_page():
@@ -109,7 +110,9 @@ def create_transactions_until_end_date_df(data: Dict[str, List[Dict]]) -> pd.Dat
 
 
 def create_transactions_between_date_range_df(
-    data: Dict[str, List[Dict]], transactions_until_end_date_df: pd.DataFrame
+    data: Dict[str, List[Dict]],
+    transactions_until_end_date_df: pd.DataFrame,
+    accounts_df: pd.DataFrame,
 ) -> pd.DataFrame:
     transactions_between_date_range_df: pd.DataFrame = pd.json_normalize(
         data["transactions_between_date_range"]
@@ -120,16 +123,19 @@ def create_transactions_between_date_range_df(
     transactions_between_date_range_df["amount"] = transactions_between_date_range_df[
         "amount"
     ].astype(float)
-    transactions_between_date_range_df["running_balance"] = (
-        transactions_between_date_range_df[
-            "id"
-        ].map(transactions_until_end_date_df.set_index("id")["running_balance"])
-    )
     transactions_between_date_range_df["categories_with_subcategories"] = (
         transactions_between_date_range_df["category.name"]
         + " - "
         + transactions_between_date_range_df["subcategory.name"]
     )
+
+    # Adding running balance
+    transactions_between_date_range_df["running_balance"] = (
+        transactions_between_date_range_df[
+            "id"
+        ].map(transactions_until_end_date_df.set_index("id")["running_balance"])
+    )
+
     return transactions_between_date_range_df
 
 
@@ -142,7 +148,11 @@ def create_accounts_df(
     )["amount_with_sign"].sum()
     accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
     accounts_df["balance_cop"] = accounts_df.apply(
-        lambda x: x["balance"] if x["currency.name"] == "COP" else x["balance"] * 4000,
+        lambda x: (
+            x["balance"]
+            if x["currency.name"] == "COP"
+            else x["balance"] * EXCHANGE_RATE_COP_USD
+        ),
         axis=1,
     )
     return accounts_df
@@ -150,10 +160,10 @@ def create_accounts_df(
 
 def get_dataframes(data: Dict[str, List[Dict]]) -> Dict[str, pd.DataFrame]:
     transactions_until_end_date_df = create_transactions_until_end_date_df(data)
-    transactions_between_date_range_df = create_transactions_between_date_range_df(
-        data, transactions_until_end_date_df
-    )
     accounts_df = create_accounts_df(data, transactions_until_end_date_df)
+    transactions_between_date_range_df = create_transactions_between_date_range_df(
+        data, transactions_until_end_date_df, accounts_df
+    )
 
     return {
         "accounts_df": accounts_df,

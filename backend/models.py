@@ -89,6 +89,7 @@ class CategoryPublic(CategoryBase):
 # SubCategory Model
 class SubCategoryBase(SQLModel):
     name: str = Field(nullable=False)
+    # TODO: type_expense: str = Field(nullable=False)  # need, want, wish
 
     category_id: int = Field(default=None, foreign_key="category.id")
 

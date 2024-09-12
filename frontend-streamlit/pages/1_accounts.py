@@ -11,8 +11,6 @@ from utils import (
 
 
 def get_accounts(api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataFrame]):
-    st.subheader("Accounts")
-
     # Getting data
     accounts: List[Dict] = api_data["accounts"]
     currencies: List[Dict] = api_data["currencies"]
@@ -22,6 +20,12 @@ def get_accounts(api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataF
     # Get total balance by summing all the balances from accounts_df
     total_balance: float = accounts_df["balance_cop"].sum()
     total_balance_formatted: str = f"${total_balance:,.0f}"
+
+    # Get total credit by summing all the credits from accounts_df where type is credit card
+    total_credit: float = accounts_df[
+        accounts_df["account_type.type"] == "credit card"
+    ]["balance_cop"].sum()
+    total_credit_formatted: str = f"${total_credit:,.0f}"
 
     # Adding Metrics
     col1, col2 = st.columns(2)
@@ -33,7 +37,23 @@ def get_accounts(api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataF
         # delta_color="inverse",
         help="Shows the total balance of all accounts",
     )
-    col2.metric("Total Credit", "9 mph", "-8%")
+    col2.metric(
+        "Total Credit",
+        value=total_credit_formatted,
+        help="Shows the total credit of all credit cards",
+    )
+
+    # Adding a bar char to show the balance of each account
+    st.subheader("Accounts Total Balance")
+    st.bar_chart(
+        accounts_df,
+        x="name",
+        y="balance_cop",
+        x_label="Accounts",
+        y_label="Balance",
+        horizontal=True,
+        # TODO: color="bar_chart_color",
+    )
 
     # Writing table
     column_config: Dict = {
@@ -62,6 +82,7 @@ def get_accounts(api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataF
     column_order = ("name", "account_type.type", "currency.name", "balance")
     disabled: List = ["created_at", "updated_at", "balance"]
 
+    st.subheader("Add, Edit or Delete Accounts")
     with st.form("form_edit_accounts"):
         st.data_editor(
             accounts_df,
@@ -139,14 +160,14 @@ def delete_accounts(accounts: List[Dict]):
 def main():
     set_up_page()
 
+    st.header("Accounts")
+
     # Getting data from API
     api_data: Dict[str, List[Dict]] = get_data_from_api()
     dataframes: Dict[str, pd.DataFrame] = get_dataframes(api_data)
 
     # Get accounts data_editor form
     get_accounts(api_data=api_data, dataframes=dataframes)
-
-    # TODO: Add a form to create new accounts with a better UI
 
 
 if __name__ == "__main__":
