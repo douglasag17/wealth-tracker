@@ -147,8 +147,6 @@ def main():
     get_accounts(api_data=api_data, dataframes=dataframes)
 
     # TODO: Add a form to create new accounts with a better UI
-    # https://docs.streamlit.io/develop/concepts/architecture/forms
-    # https://docs.streamlit.io/develop/api-reference/execution-flow/st.dialog
 
 
 if __name__ == "__main__":

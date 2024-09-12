@@ -84,8 +84,7 @@ def get_data_from_api() -> Dict[str, List[Dict]]:
     }
 
 
-def get_dataframes(data: Dict[str, List[Dict]]) -> Dict[str, pd.DataFrame]:
-    # Creating transactions_until_end_date Dataframe
+def create_transactions_until_end_date_df(data: Dict[str, List[Dict]]) -> pd.DataFrame:
     transactions_until_end_date_df: pd.DataFrame = pd.json_normalize(
         data["transactions_until_end_date"]
     )
@@ -106,8 +105,12 @@ def get_dataframes(data: Dict[str, List[Dict]]) -> Dict[str, pd.DataFrame]:
             "account_id"
         )["amount_with_sign"].cumsum()
     )
+    return transactions_until_end_date_df
 
-    # Creating transactions_between_date_range Dataframe
+
+def create_transactions_between_date_range_df(
+    data: Dict[str, List[Dict]], transactions_until_end_date_df: pd.DataFrame
+) -> pd.DataFrame:
     transactions_between_date_range_df: pd.DataFrame = pd.json_normalize(
         data["transactions_between_date_range"]
     )
@@ -122,26 +125,35 @@ def get_dataframes(data: Dict[str, List[Dict]]) -> Dict[str, pd.DataFrame]:
             "id"
         ].map(transactions_until_end_date_df.set_index("id")["running_balance"])
     )
-
-    # Adding a column with the category and subcategory, this relates to the selectbox
     transactions_between_date_range_df["categories_with_subcategories"] = (
         transactions_between_date_range_df["category.name"]
         + " - "
         + transactions_between_date_range_df["subcategory.name"]
     )
+    return transactions_between_date_range_df
 
-    # Creatting Accounts Dataframe
+
+def create_accounts_df(
+    data: Dict[str, List[Dict]], transactions_until_end_date_df: pd.DataFrame
+) -> pd.DataFrame:
     accounts_df: pd.DataFrame = pd.json_normalize(data["accounts"])
     transactions_aggregated: pd.DataFrame = transactions_until_end_date_df.groupby(
         "account_id"
     )["amount_with_sign"].sum()
     accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
-
-    # Adding a column with balance in COP for each account depending on the currency
     accounts_df["balance_cop"] = accounts_df.apply(
         lambda x: x["balance"] if x["currency.name"] == "COP" else x["balance"] * 4000,
         axis=1,
     )
+    return accounts_df
+
+
+def get_dataframes(data: Dict[str, List[Dict]]) -> Dict[str, pd.DataFrame]:
+    transactions_until_end_date_df = create_transactions_until_end_date_df(data)
+    transactions_between_date_range_df = create_transactions_between_date_range_df(
+        data, transactions_until_end_date_df
+    )
+    accounts_df = create_accounts_df(data, transactions_until_end_date_df)
 
     return {
         "accounts_df": accounts_df,
