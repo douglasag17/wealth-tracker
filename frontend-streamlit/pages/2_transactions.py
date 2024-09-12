@@ -11,16 +11,22 @@ from utils import (
 )
 
 
-def add_a_transaction():
+def add_a_transaction(api_data: Dict[str, List[Dict]]):
     st.subheader("Add a new transaction")
-    with st.form("form_add_transaction"):
+
+    # Getting data
+    accounts: List[Dict] = api_data["accounts"]
+    categories: List[Dict] = api_data["categories"]
+    subcategories: List[Dict] = api_data["subcategories"]
+
+    # Creating form
+    with st.form("form_add_transaction", clear_on_submit=True, border=True):
         transaction_date: datetime = st.date_input(
             "Transaction Date",
             value=datetime.now(),
             format="YYYY-MM-DD",
             help="Select the date and time of the transaction",
         )
-        accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
         account_name: str = st.selectbox(
             "Account",
             options=[account["name"] for account in accounts],
@@ -30,10 +36,6 @@ def add_a_transaction():
             "Amount",
             help="Add the amount of the transaction. Currency depends on the selected account",
         )
-        categories: List[Dict] = requests.get(url=f"{API_URL}/categories/").json()
-        subcategories: List[Dict] = requests.get(
-            url=f"{API_URL}/sub_categories/"
-        ).json()
         category: str = st.selectbox(
             "Category",
             options=[
@@ -142,6 +144,7 @@ def get_transactions(
             use_container_width=True,
             hide_index=True,
             num_rows="dynamic",
+            width=10000,
         )
 
         # Submit button
@@ -268,11 +271,11 @@ def main():
     api_data: Dict[str, List[Dict]] = get_data_from_api()
     dataframes: Dict[str, pd.DataFrame] = get_dataframes(api_data)
 
-    # add_a_transaction()
+    # Adding a form to create new transactions
+    add_a_transaction(api_data=api_data)
+
+    # Get transactions data_editor form
     get_transactions(api_data=api_data, dataframes=dataframes)
-    # TODO: Add a form to create new accounts with a better UI
-    # https://docs.streamlit.io/develop/concepts/architecture/forms
-    # https://docs.streamlit.io/develop/api-reference/execution-flow/st.dialog
 
 
 if __name__ == "__main__":

@@ -19,9 +19,20 @@ def get_accounts(api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataF
     account_types: List[Dict] = api_data["account_types"]
     accounts_df: pd.DataFrame = dataframes["accounts_df"]
 
+    # Get total balance by summing all the balances from accounts_df
+    total_balance: float = accounts_df["balance_cop"].sum()
+    total_balance_formatted: str = f"${total_balance:,.0f}"
+
     # Adding Metrics
     col1, col2 = st.columns(2)
-    col1.metric("Total Balance", "70 °F", "1.2 °F")
+    # TODO: Gettting delta value for total balance metric card to show if it increased or decreased from the previous period
+    col1.metric(
+        "Total Balance",
+        value=total_balance_formatted,
+        # delta=0,
+        # delta_color="inverse",
+        help="Shows the total balance of all accounts",
+    )
     col2.metric("Total Credit", "9 mph", "-8%")
 
     # Writing table

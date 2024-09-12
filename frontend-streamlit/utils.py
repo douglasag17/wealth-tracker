@@ -14,8 +14,8 @@ def set_up_page():
     st.set_page_config(
         page_title=page_title,
         page_icon=page_icon,
-        layout="wide",
-        initial_sidebar_state="expanded",
+        # layout="wide",
+        initial_sidebar_state="auto",
     )
     st.title(f"{page_icon} {page_title}")
     set_up_sidebar()
@@ -122,6 +122,7 @@ def get_dataframes(data: Dict[str, List[Dict]]) -> Dict[str, pd.DataFrame]:
             "id"
         ].map(transactions_until_end_date_df.set_index("id")["running_balance"])
     )
+
     # Adding a column with the category and subcategory, this relates to the selectbox
     transactions_between_date_range_df["categories_with_subcategories"] = (
         transactions_between_date_range_df["category.name"]
@@ -135,6 +136,12 @@ def get_dataframes(data: Dict[str, List[Dict]]) -> Dict[str, pd.DataFrame]:
         "account_id"
     )["amount_with_sign"].sum()
     accounts_df["balance"] = accounts_df["id"].map(transactions_aggregated).fillna(0)
+
+    # Adding a column with balance in COP for each account depending on the currency
+    accounts_df["balance_cop"] = accounts_df.apply(
+        lambda x: x["balance"] if x["currency.name"] == "COP" else x["balance"] * 4000,
+        axis=1,
+    )
 
     return {
         "accounts_df": accounts_df,
