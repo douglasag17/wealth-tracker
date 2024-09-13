@@ -89,7 +89,9 @@ class CategoryPublic(CategoryBase):
 # SubCategory Model
 class SubCategoryBase(SQLModel):
     name: str = Field(nullable=False)
-    # TODO: type_expense: str = Field(nullable=False)  # need, want, wish
+    type_expense: str | None = Field(
+        nullable=False, default=""
+    )  # calculate ratio 50 30 20 rule: needs (40%) : wants (20%): savings/investments (40$)
 
     category_id: int = Field(default=None, foreign_key="category.id")
 

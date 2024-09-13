@@ -79,9 +79,15 @@ def create_categories():
 def create_subcategories():
     with Session(engine) as session:
         subcategory_1 = SubCategory(id=1, name="wage", category_id=1)
-        subcategory_2 = SubCategory(id=2, name="rent", category_id=2)
-        subcategory_3 = SubCategory(id=3, name="groceries", category_id=3)
-        subcategory_4 = SubCategory(id=4, name="restaurant", category_id=3)
+        subcategory_2 = SubCategory(
+            id=2, name="rent", type_expense="needs", category_id=2
+        )
+        subcategory_3 = SubCategory(
+            id=3, name="groceries", type_expense="needs", category_id=3
+        )
+        subcategory_4 = SubCategory(
+            id=4, name="restaurant", type_expense="wants", category_id=3
+        )
         session.add(subcategory_1)
         session.add(subcategory_2)
         session.add(subcategory_3)
