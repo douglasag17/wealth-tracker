@@ -24,7 +24,10 @@ docker compose watch
 docker compose down
 ```
 
-Go to: http://127.0.0.1:8000/docs
+Go to: http://127.0.0.1:8000/docs. You should see something like this:
+
+![FastAPI Swagger UI](../docs/images/fastapi-swagger-ui.png)
+
 
 ### TODO:
 
