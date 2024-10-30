@@ -1,47 +1,49 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlmodel import Session, select
 from contextlib import asynccontextmanager
-from .database import get_session, create_db_and_tables, drop_db_and_tables
+from datetime import date, timedelta
+from typing import List, Optional
+
+from fastapi import Depends, FastAPI, HTTPException
+from sqlmodel import Session, select
+
+from .database import create_db_and_tables, drop_db_and_tables, get_session
 from .models import (
     Account,
-    AccountPublic,
     AccountCreate,
-    AccountUpdate,
+    AccountPublic,
     AccountPublicWithTypeAndCurrency,
-    Currency,
-    CurrencyPublic,
-    CurrencyCreate,
-    CurrencyUpdate,
     AccountType,
-    AccountTypePublic,
     AccountTypeCreate,
+    AccountTypePublic,
     AccountTypeUpdate,
-    Category,
-    CategoryPublic,
-    CategoryCreate,
-    CategoryUpdate,
-    CategoryPublicWithSubcategories,
-    SubCategory,
-    SubCategoryPublic,
-    SubCategoryCreate,
-    SubCategoryUpdate,
-    SubCategoryPublicWithCategory,
-    Transaction,
-    TransactionPublic,
-    TransactionCreate,
-    TransactionUpdate,
-    TransactionPublicWithCategorySubcategoryAndAccount,
-    PlannedTransaction,
-    PlannedTransactionPublic,
-    PlannedTransactionCreate,
-    PlannedTransactionUpdate,
+    AccountUpdate,
     Budget,
-    BudgetPublic,
     BudgetCreate,
+    BudgetPublic,
     BudgetUpdate,
+    Category,
+    CategoryCreate,
+    CategoryPublic,
+    CategoryPublicWithSubcategories,
+    CategoryUpdate,
+    Currency,
+    CurrencyCreate,
+    CurrencyPublic,
+    CurrencyUpdate,
+    PlannedTransaction,
+    PlannedTransactionCreate,
+    PlannedTransactionPublic,
+    PlannedTransactionUpdate,
+    SubCategory,
+    SubCategoryCreate,
+    SubCategoryPublic,
+    SubCategoryPublicWithCategory,
+    SubCategoryUpdate,
+    Transaction,
+    TransactionCreate,
+    TransactionPublic,
+    TransactionPublicWithCategorySubcategoryAndAccount,
+    TransactionUpdate,
 )
-from typing import List, Optional
-from datetime import date, timedelta
 
 
 @asynccontextmanager
@@ -61,56 +63,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-@app.post("/accounts/", response_model=AccountPublic)
-def create_account(*, session: Session = Depends(get_session), account: AccountCreate):
-    db_account = Account.model_validate(account)
-    session.add(db_account)
-    session.commit()
-    session.refresh(db_account)
-    return db_account
-
-
-@app.get("/accounts/", response_model=list[AccountPublicWithTypeAndCurrency])
-def get_accounts(*, session: Session = Depends(get_session)):
-    accounts: List[Account] = session.exec(select(Account)).all()
-    accounts: List[Account] = sorted(accounts, key=lambda x: (x.created_at))
-    return accounts
-
-
-@app.get("/accounts/{account_id}", response_model=AccountPublicWithTypeAndCurrency)
-def get_account(*, session: Session = Depends(get_session), account_id: int):
-    account = session.get(Account, account_id)
-    if not account:
-        raise HTTPException(status_code=404, detail="Account not found")
-    return account
-
-
-@app.delete("/accounts/{account_id}")
-def delete_account(*, session: Session = Depends(get_session), account_id: int):
-    account = session.get(Account, account_id)
-    if not account:
-        raise HTTPException(status_code=404, detail="Account not found")
-    session.delete(account)
-    session.commit()
-    return {"ok": True}
-
-
-@app.patch("/accounts/{account_id}", response_model=AccountPublic)
-def update_account(
-    *, session: Session = Depends(get_session), account_id: int, account: AccountUpdate
-):
-    db_account = session.get(Account, account_id)
-    if not db_account:
-        raise HTTPException(status_code=404, detail="Account not found")
-    account_data = account.model_dump(exclude_unset=True)
-    for key, value in account_data.items():
-        setattr(db_account, key, value)
-    session.add(db_account)
-    session.commit()
-    session.refresh(db_account)
-    return db_account
-
-
+# Currencies endpoints
 @app.post("/currencies/", response_model=CurrencyPublic)
 def create_currency(
     *, session: Session = Depends(get_session), currency: CurrencyCreate
@@ -165,6 +118,7 @@ def update_currency(
     return db_currency
 
 
+# Account Types endpoints
 @app.post("/account_types/", response_model=AccountTypePublic)
 def create_account_type(
     *, session: Session = Depends(get_session), account_type: AccountTypeCreate
@@ -221,6 +175,58 @@ def update_account_type(
     return db_account_type
 
 
+# Accounts endpoints
+@app.post("/accounts/", response_model=AccountPublic)
+def create_account(*, session: Session = Depends(get_session), account: AccountCreate):
+    db_account = Account.model_validate(account)
+    session.add(db_account)
+    session.commit()
+    session.refresh(db_account)
+    return db_account
+
+
+@app.get("/accounts/", response_model=list[AccountPublicWithTypeAndCurrency])
+def get_accounts(*, session: Session = Depends(get_session)):
+    accounts: List[Account] = session.exec(select(Account)).all()
+    accounts: List[Account] = sorted(accounts, key=lambda x: (x.created_at))
+    return accounts
+
+
+@app.get("/accounts/{account_id}", response_model=AccountPublicWithTypeAndCurrency)
+def get_account(*, session: Session = Depends(get_session), account_id: int):
+    account = session.get(Account, account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return account
+
+
+@app.delete("/accounts/{account_id}")
+def delete_account(*, session: Session = Depends(get_session), account_id: int):
+    account = session.get(Account, account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    session.delete(account)
+    session.commit()
+    return {"ok": True}
+
+
+@app.patch("/accounts/{account_id}", response_model=AccountPublic)
+def update_account(
+    *, session: Session = Depends(get_session), account_id: int, account: AccountUpdate
+):
+    db_account = session.get(Account, account_id)
+    if not db_account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    account_data = account.model_dump(exclude_unset=True)
+    for key, value in account_data.items():
+        setattr(db_account, key, value)
+    session.add(db_account)
+    session.commit()
+    session.refresh(db_account)
+    return db_account
+
+
+# Categories endpoints
 @app.post("/categories/", response_model=CategoryPublic)
 def create_category(
     *, session: Session = Depends(get_session), category: CategoryCreate
@@ -275,6 +281,7 @@ def update_category(
     return db_category
 
 
+# SubCategories endpoints
 @app.post("/sub_categories/", response_model=SubCategoryPublic)
 def create_sub_category(
     *, session: Session = Depends(get_session), sub_category: SubCategoryCreate
@@ -333,6 +340,7 @@ def update_sub_category(
     return db_sub_category
 
 
+# Transactions endpoints
 @app.post("/transactions/", response_model=TransactionPublic)
 def create_transaction(
     *, session: Session = Depends(get_session), transaction: TransactionCreate
@@ -411,6 +419,7 @@ def update_transaction(
     return db_transaction
 
 
+# Planned Transactions endpoints
 @app.post("/planned_transactions/", response_model=PlannedTransactionPublic)
 def create_planned_transaction(
     *,
@@ -497,6 +506,7 @@ def update_planned_transaction(
     return db_planned_transaction
 
 
+# Budgets endpoints
 @app.post("/budgets/", response_model=BudgetPublic)
 def create_budget(*, session: Session = Depends(get_session), budget: BudgetCreate):
     db_budget = Budget.model_validate(budget)
