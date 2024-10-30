@@ -302,3 +302,54 @@ def test_delete_budget():
     response = client.delete("/budgets/1")
     assert response.status_code == 200
     assert response.json() == {"ok": True}
+
+
+# Endpoints with precalculated data
+def test_get_total_balance():
+    response = client.get("/total_balance/")
+    assert response.status_code == 200
+    assert response.json() == {"total_balance": 0}
+
+    # Create a mock account
+    client.post("/categories/", json={"name": "food", "type": "expense"})
+    client.post("/categories/", json={"name": "income", "type": "income"})
+
+    # Create some mock transactions
+    client.post(
+        "/transactions/",
+        json={
+            "amount": 100.55,
+            "transaction_date": "2024-10-02 12:30:00",
+            "description": "restaurant bill",
+            "account_id": 1,
+            "category_id": 1,
+            "subcategory_id": 1,
+        },
+    )
+    client.post(
+        "/transactions/",
+        json={
+            "amount": 200,
+            "transaction_date": "2024-10-15 12:30:00",
+            "description": "groceries",
+            "account_id": 1,
+            "category_id": 1,
+            "subcategory_id": 1,
+        },
+    )
+    client.post(
+        "/transactions/",
+        json={
+            "amount": 700,
+            "transaction_date": "2024-10-25 12:30:00",
+            "description": "rwage",
+            "account_id": 1,
+            "category_id": 2,
+            "subcategory_id": 2,
+        },
+    )
+
+    # Get the total balance
+    response = client.get("/total_balance/")
+    assert response.status_code == 200
+    assert response.json() == {"total_balance": 399.45}
