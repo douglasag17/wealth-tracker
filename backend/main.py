@@ -581,3 +581,28 @@ def get_total_balance(
         else:
             total_balance -= transaction.amount
     return {"total_balance": total_balance}
+
+
+@app.get("/total_balance/{account_id}")
+def get_total_account_balance(
+    *,
+    account_id: int,
+    end_date: Optional[date] = date(date.today().year, date.today().month + 1, 1)
+    - timedelta(days=1),
+    session: Session = Depends(get_session),
+):
+    transactions: List[Transaction] = session.exec(
+        select(Transaction)
+        .where(Transaction.account_id == account_id)
+        .where(Transaction.transaction_date <= end_date)
+    ).all()
+    transactions: List[Transaction] = sorted(
+        transactions, key=lambda x: x.transaction_date
+    )
+    total_balance = 0
+    for transaction in transactions:
+        if transaction.category.type == "income":
+            total_balance += transaction.amount
+        else:
+            total_balance -= transaction.amount
+    return {"total_balance": total_balance}
