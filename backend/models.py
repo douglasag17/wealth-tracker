@@ -1,12 +1,18 @@
-from typing import List
-from sqlmodel import SQLModel, Field, Relationship
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import List
+
+from sqlmodel import Field, Relationship, SQLModel
 
 
 # Currency Model
 class CurrencyBase(SQLModel):
     name: str = Field(nullable=False)  # COP, USD
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
 
 
 class Currency(CurrencyBase, table=True):
@@ -30,6 +36,11 @@ class CurrencyUpdate(SQLModel):
 # AccountType Model
 class AccountTypeBase(SQLModel):
     type: str = Field(nullable=False)
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
 
 
 class AccountType(AccountTypeBase, table=True):
@@ -92,6 +103,11 @@ class AccountUpdate(SQLModel):
 class CategoryBase(SQLModel):
     name: str = Field(nullable=False)
     type: str = Field(nullable=False)  # income, expense
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
 
 
 class Category(CategoryBase, table=True):
@@ -123,6 +139,11 @@ class SubCategoryBase(SQLModel):
     type_expense: str | None = Field(
         nullable=False, default=""
     )  # calculate ratio 50 30 20 rule: needs (40%) : wants (20%): savings/investments (40$)
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
 
     category_id: int = Field(default=None, foreign_key="category.id")
 
@@ -252,7 +273,12 @@ class PlannedTransactionUpdate(SQLModel):
 class BudgetBase(SQLModel):
     year: int = Field(nullable=False)
     month: int = Field(nullable=False)
-    budget: Decimal = Field(default=0, nullable=False)
+    budget: Decimal = Field(default=0, max_digits=50, decimal_places=2, nullable=False)
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
 
     subcategory_id: int = Field(default=None, foreign_key="subcategory.id")
 

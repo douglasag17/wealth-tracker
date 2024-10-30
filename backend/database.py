@@ -1,7 +1,8 @@
-from sqlmodel import SQLModel, create_engine, Session
-from .models import Currency, AccountType, Account, Category, SubCategory, Transaction
 from datetime import datetime
 
+from sqlmodel import Session, SQLModel, create_engine
+
+from .models import Account, AccountType, Category, Currency, SubCategory, Transaction
 
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -17,13 +18,15 @@ def get_session():
 def create_db_and_tables():
     drop_db_and_tables()
     SQLModel.metadata.create_all(engine)
+
+
+def populate_db():
     create_currencies()
     create_account_types()
     create_accounts()
     create_categories()
     create_subcategories()
     create_transactions()
-    # create_monthly_budget()
 
 
 def drop_db_and_tables():
@@ -138,8 +141,3 @@ def create_transactions():
         session.add(transaction_3)
         session.add(transaction_4)
         session.commit()
-
-
-# def create_monthly_budget():
-#     with Session(engine) as session:
-#         pass

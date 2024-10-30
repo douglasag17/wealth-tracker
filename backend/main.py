@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session, select
 
-from .database import create_db_and_tables, drop_db_and_tables, get_session
+from .database import create_db_and_tables, drop_db_and_tables, get_session, populate_db
 from .models import (
     Account,
     AccountCreate,
@@ -56,6 +56,7 @@ async def lifespan(app: FastAPI):
         app (FastAPI): FastAPI App
     """
     create_db_and_tables()
+    populate_db()
     yield
     drop_db_and_tables()
 
@@ -89,16 +90,6 @@ def get_currency(*, session: Session = Depends(get_session), currency_id: int):
     return currency
 
 
-@app.delete("/currencies/{currency_id}")
-def delete_currency(*, session: Session = Depends(get_session), currency_id: int):
-    currency = session.get(Currency, currency_id)
-    if not currency:
-        raise HTTPException(status_code=404, detail="Currency not found")
-    session.delete(currency)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch("/currencies/{currency_id}", response_model=CurrencyPublic)
 def update_currency(
     *,
@@ -116,6 +107,16 @@ def update_currency(
     session.commit()
     session.refresh(db_currency)
     return db_currency
+
+
+@app.delete("/currencies/{currency_id}")
+def delete_currency(*, session: Session = Depends(get_session), currency_id: int):
+    currency = session.get(Currency, currency_id)
+    if not currency:
+        raise HTTPException(status_code=404, detail="Currency not found")
+    session.delete(currency)
+    session.commit()
+    return {"ok": True}
 
 
 # Account Types endpoints
@@ -144,18 +145,6 @@ def get_account_type(*, session: Session = Depends(get_session), account_type_id
     return account_type
 
 
-@app.delete("/account_types/{account_type_id}")
-def delete_account_type(
-    *, session: Session = Depends(get_session), account_type_id: int
-):
-    account_type = session.get(AccountType, account_type_id)
-    if not account_type:
-        raise HTTPException(status_code=404, detail="Account Type not found")
-    session.delete(account_type)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch("/account_types/{account_type_id}", response_model=AccountTypePublic)
 def update_account_type(
     *,
@@ -173,6 +162,18 @@ def update_account_type(
     session.commit()
     session.refresh(db_account_type)
     return db_account_type
+
+
+@app.delete("/account_types/{account_type_id}")
+def delete_account_type(
+    *, session: Session = Depends(get_session), account_type_id: int
+):
+    account_type = session.get(AccountType, account_type_id)
+    if not account_type:
+        raise HTTPException(status_code=404, detail="Account Type not found")
+    session.delete(account_type)
+    session.commit()
+    return {"ok": True}
 
 
 # Accounts endpoints
@@ -200,16 +201,6 @@ def get_account(*, session: Session = Depends(get_session), account_id: int):
     return account
 
 
-@app.delete("/accounts/{account_id}")
-def delete_account(*, session: Session = Depends(get_session), account_id: int):
-    account = session.get(Account, account_id)
-    if not account:
-        raise HTTPException(status_code=404, detail="Account not found")
-    session.delete(account)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch("/accounts/{account_id}", response_model=AccountPublic)
 def update_account(
     *, session: Session = Depends(get_session), account_id: int, account: AccountUpdate
@@ -224,6 +215,16 @@ def update_account(
     session.commit()
     session.refresh(db_account)
     return db_account
+
+
+@app.delete("/accounts/{account_id}")
+def delete_account(*, session: Session = Depends(get_session), account_id: int):
+    account = session.get(Account, account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    session.delete(account)
+    session.commit()
+    return {"ok": True}
 
 
 # Categories endpoints
@@ -252,16 +253,6 @@ def get_category(*, session: Session = Depends(get_session), category_id: int):
     return category
 
 
-@app.delete("/categories/{category_id}")
-def delete_category(*, session: Session = Depends(get_session), category_id: int):
-    category = session.get(Category, category_id)
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    session.delete(category)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch("/categories/{category_id}", response_model=CategoryPublic)
 def update_category(
     *,
@@ -279,6 +270,16 @@ def update_category(
     session.commit()
     session.refresh(db_category)
     return db_category
+
+
+@app.delete("/categories/{category_id}")
+def delete_category(*, session: Session = Depends(get_session), category_id: int):
+    category = session.get(Category, category_id)
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    session.delete(category)
+    session.commit()
+    return {"ok": True}
 
 
 # SubCategories endpoints
@@ -309,18 +310,6 @@ def get_sub_category(*, session: Session = Depends(get_session), sub_category_id
     return sub_category
 
 
-@app.delete("/sub_categories/{sub_category_id}")
-def delete_sub_category(
-    *, session: Session = Depends(get_session), sub_category_id: int
-):
-    sub_category = session.get(SubCategory, sub_category_id)
-    if not sub_category:
-        raise HTTPException(status_code=404, detail="SubCategory not found")
-    session.delete(sub_category)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch("/sub_categories/{sub_category_id}", response_model=SubCategoryPublic)
 def update_sub_category(
     *,
@@ -338,6 +327,18 @@ def update_sub_category(
     session.commit()
     session.refresh(db_sub_category)
     return db_sub_category
+
+
+@app.delete("/sub_categories/{sub_category_id}")
+def delete_sub_category(
+    *, session: Session = Depends(get_session), sub_category_id: int
+):
+    sub_category = session.get(SubCategory, sub_category_id)
+    if not sub_category:
+        raise HTTPException(status_code=404, detail="SubCategory not found")
+    session.delete(sub_category)
+    session.commit()
+    return {"ok": True}
 
 
 # Transactions endpoints
@@ -390,16 +391,6 @@ def get_transaction(*, session: Session = Depends(get_session), transaction_id: 
     return transaction
 
 
-@app.delete("/transactions/{transaction_id}")
-def delete_transaction(*, session: Session = Depends(get_session), transaction_id: int):
-    transaction = session.get(Transaction, transaction_id)
-    if not transaction:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-    session.delete(transaction)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch("/transactions/{transaction_id}", response_model=TransactionPublic)
 def update_transaction(
     *,
@@ -417,6 +408,16 @@ def update_transaction(
     session.commit()
     session.refresh(db_transaction)
     return db_transaction
+
+
+@app.delete("/transactions/{transaction_id}")
+def delete_transaction(*, session: Session = Depends(get_session), transaction_id: int):
+    transaction = session.get(Transaction, transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    session.delete(transaction)
+    session.commit()
+    return {"ok": True}
 
 
 # Planned Transactions endpoints
@@ -472,18 +473,6 @@ def get_planned_transaction(
     return planned_transaction
 
 
-@app.delete("/planned_transactions/{planned_transaction_id}")
-def delete_planned_transaction(
-    *, session: Session = Depends(get_session), planned_transaction_id: int
-):
-    planned_transaction = session.get(PlannedTransaction, planned_transaction_id)
-    if not planned_transaction:
-        raise HTTPException(status_code=404, detail="Planned Transaction not found")
-    session.delete(planned_transaction)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch(
     "/planned_transactions/{planned_transaction_id}",
     response_model=PlannedTransactionPublic,
@@ -504,6 +493,18 @@ def update_planned_transaction(
     session.commit()
     session.refresh(db_planned_transaction)
     return db_planned_transaction
+
+
+@app.delete("/planned_transactions/{planned_transaction_id}")
+def delete_planned_transaction(
+    *, session: Session = Depends(get_session), planned_transaction_id: int
+):
+    planned_transaction = session.get(PlannedTransaction, planned_transaction_id)
+    if not planned_transaction:
+        raise HTTPException(status_code=404, detail="Planned Transaction not found")
+    session.delete(planned_transaction)
+    session.commit()
+    return {"ok": True}
 
 
 # Budgets endpoints
@@ -530,16 +531,6 @@ def get_budget(*, session: Session = Depends(get_session), budget_id: int):
     return budget
 
 
-@app.delete("/budgets/{budget_id}")
-def delete_budget(*, session: Session = Depends(get_session), budget_id: int):
-    budget = session.get(Budget, budget_id)
-    if not budget:
-        raise HTTPException(status_code=404, detail="Budget not found")
-    session.delete(budget)
-    session.commit()
-    return {"ok": True}
-
-
 @app.patch("/budgets/{budget_id}", response_model=BudgetPublic)
 def update_budget(
     *,
@@ -557,3 +548,13 @@ def update_budget(
     session.commit()
     session.refresh(db_budget)
     return db_budget
+
+
+@app.delete("/budgets/{budget_id}")
+def delete_budget(*, session: Session = Depends(get_session), budget_id: int):
+    budget = session.get(Budget, budget_id)
+    if not budget:
+        raise HTTPException(status_code=404, detail="Budget not found")
+    session.delete(budget)
+    session.commit()
+    return {"ok": True}
