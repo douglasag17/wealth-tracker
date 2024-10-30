@@ -1,9 +1,10 @@
 from fastapi.testclient import TestClient
 
-from .database import create_db_and_tables
+from .database import create_db_and_tables, drop_db_and_tables
 from .main import app
 
 client = TestClient(app)
+drop_db_and_tables()
 create_db_and_tables()
 
 
@@ -305,64 +306,51 @@ def test_delete_budget():
 
 
 # Endpoints with precalculated data
-def test_get_total_balance():
-    response = client.get("/total_balance/")
-    assert response.status_code == 200
-    assert response.json() == {"total_balance": 0}
+def populate_db():
+    create_db_and_tables()
 
-    # Create a mock account
+    # Create some mock currencies
+    client.post("/currencies/", json={"name": "COP"})
+
+    # Create some mock account types
+    client.post("/account_types/", json={"type": "savings account"})
+    client.post("/account_types/", json={"type": "credit card"})
+
+    # Create some mock accounts
+    client.post(
+        "/accounts/",
+        json={
+            "name": "bancolombia savings account",
+            "account_type_id": 1,
+            "currency_id": 1,
+        },
+    )
+    client.post(
+        "/accounts/",
+        json={
+            "name": "bancolombia mastercard black",
+            "account_type_id": 2,
+            "currency_id": 1,
+        },
+    )
+
+    # Create some mock categories
     client.post("/categories/", json={"name": "food", "type": "expense"})
     client.post("/categories/", json={"name": "income", "type": "income"})
 
-    # Create some mock transactions
+    # Create some mock subcategories
     client.post(
-        "/transactions/",
-        json={
-            "amount": 100.55,
-            "transaction_date": "2024-10-02 12:30:00",
-            "description": "restaurant bill",
-            "account_id": 1,
-            "category_id": 1,
-            "subcategory_id": 1,
-        },
+        "/sub_categories/",
+        json={"name": "restaurant", "type_expense": "wants", "category_id": 1},
     )
     client.post(
-        "/transactions/",
-        json={
-            "amount": 200,
-            "transaction_date": "2024-10-15 12:30:00",
-            "description": "groceries",
-            "account_id": 1,
-            "category_id": 1,
-            "subcategory_id": 1,
-        },
+        "/sub_categories/",
+        json={"name": "groceries", "type_expense": "needs", "category_id": 1},
     )
     client.post(
-        "/transactions/",
-        json={
-            "amount": 700,
-            "transaction_date": "2024-10-25 12:30:00",
-            "description": "rwage",
-            "account_id": 1,
-            "category_id": 2,
-            "subcategory_id": 2,
-        },
+        "/sub_categories/",
+        json={"name": "wage", "category_id": 2},
     )
-
-    # Get the total balance
-    response = client.get("/total_balance/")
-    assert response.status_code == 200
-    assert response.json() == {"total_balance": 399.45}
-
-
-def test_get_total_account_balance():
-    response = client.get("/total_balance/1")
-    assert response.status_code == 200
-    assert response.json() == {"total_balance": 0}
-
-    # Create a mock account
-    client.post("/categories/", json={"name": "food", "type": "expense"})
-    client.post("/categories/", json={"name": "income", "type": "income"})
 
     # Create some mock transactions
     client.post(
@@ -384,7 +372,7 @@ def test_get_total_account_balance():
             "description": "groceries",
             "account_id": 2,
             "category_id": 1,
-            "subcategory_id": 1,
+            "subcategory_id": 2,
         },
     )
     client.post(
@@ -392,14 +380,47 @@ def test_get_total_account_balance():
         json={
             "amount": 700,
             "transaction_date": "2024-10-25 12:30:00",
-            "description": "rwage",
+            "description": "wage",
             "account_id": 1,
             "category_id": 2,
             "subcategory_id": 2,
         },
     )
 
-    # Get the total balance
-    response = client.get("/total_balance/1")
+
+def test_get_total_balance():
+    populate_db()
+    response = client.get("/total_balance/")
+    assert response.status_code == 200
+    assert response.json() == {"total_balance": 399.45}
+    drop_db_and_tables()
+
+
+def test_get_total_account_balance():
+    populate_db()
+    response = client.get("/total_balance/1/")
     assert response.status_code == 200
     assert response.json() == {"total_balance": 599.45}
+    drop_db_and_tables()
+
+
+def test_get_total_balance_per_account():
+    populate_db()
+    response = client.get("/total_balance_per_account/")
+    print(response.json())
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "name": "bancolombia savings account",
+            "total_balance": 599.45,
+            "currency": "COP",
+        },
+        {
+            "id": 2,
+            "name": "bancolombia mastercard black",
+            "total_balance": -200.00,
+            "currency": "COP",
+        },
+    ]
+    drop_db_and_tables()
