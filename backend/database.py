@@ -16,6 +16,7 @@ def get_session():
 
 
 def create_db_and_tables():
+    drop_db_and_tables()
     SQLModel.metadata.create_all(engine)
 
 

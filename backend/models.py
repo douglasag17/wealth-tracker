@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 from typing import List
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -100,9 +101,14 @@ class AccountUpdate(SQLModel):
 
 
 # Category Model
+class CategoryTypeEnum(str, Enum):
+    income = "income"
+    expense = "expense"
+
+
 class CategoryBase(SQLModel):
     name: str = Field(nullable=False)
-    type: str = Field(nullable=False)  # income, expense
+    type: CategoryTypeEnum = Field(nullable=False)
     created_at: datetime | None = Field(default_factory=datetime.utcnow)
     updated_at: datetime | None = Field(
         default_factory=datetime.utcnow,
@@ -134,11 +140,17 @@ class CategoryUpdate(SQLModel):
 
 
 # SubCategory Model
+class SubCategoryTypeEnum(str, Enum):
+    # calculate ratio 50 30 20 rule: needs (40%) : wants (20%): savings/investments (40$)
+    needs = "needs"
+    wants = "wants"
+    savings = "savings"
+    income = ""
+
+
 class SubCategoryBase(SQLModel):
     name: str = Field(nullable=False)
-    type_expense: str | None = Field(
-        nullable=False, default=""
-    )  # calculate ratio 50 30 20 rule: needs (40%) : wants (20%): savings/investments (40$)
+    type_expense: SubCategoryTypeEnum | None = Field(nullable=False, default="")
     created_at: datetime | None = Field(default_factory=datetime.utcnow)
     updated_at: datetime | None = Field(
         default_factory=datetime.utcnow,
