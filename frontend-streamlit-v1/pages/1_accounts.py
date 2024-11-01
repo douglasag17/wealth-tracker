@@ -1,13 +1,9 @@
-import streamlit as st
-import requests
+from typing import Dict, List
+
 import pandas as pd
-from typing import List, Dict
-from utils import (
-    set_up_page,
-    get_data_from_api,
-    get_dataframes,
-    API_URL,
-)
+import requests
+import streamlit as st
+from utils import API_URL, get_data_from_api, get_dataframes, set_up_page
 
 
 def get_accounts(api_data: Dict[str, List[Dict]], dataframes: Dict[str, pd.DataFrame]):

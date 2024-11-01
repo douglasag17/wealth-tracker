@@ -407,18 +407,19 @@ def test_get_total_account_balance():
 def test_get_total_balance_per_account():
     populate_db()
     response = client.get("/total_balance_per_account/")
-    print(response.json())
     assert response.status_code == 200
     assert response.json() == [
         {
             "id": 1,
             "name": "bancolombia savings account",
+            "account_type": "savings account",
             "total_balance": 599.45,
             "currency": "COP",
         },
         {
             "id": 2,
             "name": "bancolombia mastercard black",
+            "account_type": "credit card",
             "total_balance": -200.00,
             "currency": "COP",
         },

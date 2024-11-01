@@ -1,14 +1,10 @@
-import streamlit as st
-import requests
-import pandas as pd
-from typing import List, Dict
 from datetime import datetime
-from utils import (
-    set_up_page,
-    get_data_from_api,
-    get_dataframes,
-    API_URL,
-)
+from typing import Dict, List
+
+import pandas as pd
+import requests
+import streamlit as st
+from utils import API_URL, get_data_from_api, get_dataframes, set_up_page
 
 
 def add_a_transaction(api_data: Dict[str, List[Dict]]):

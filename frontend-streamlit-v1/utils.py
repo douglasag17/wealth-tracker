@@ -1,9 +1,9 @@
-import streamlit as st
 from datetime import date, timedelta
-from typing import List, Dict
-import requests
-import pandas as pd
+from typing import Dict, List
 
+import pandas as pd
+import requests
+import streamlit as st
 
 API_URL: str = "http://127.0.0.1:8000"
 EXCHANGE_RATE_COP_USD: float = 4000

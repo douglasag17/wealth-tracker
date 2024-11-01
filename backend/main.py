@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -360,7 +360,9 @@ def create_transaction(
 def get_transactions(
     *,
     start_date: Optional[date] = None,
-    end_date: Optional[date] = date(date.today().year, date.today().month + 1, 1)
+    end_date: Optional[datetime] = datetime(
+        date.today().year, date.today().month + 1, 1, 23, 59, 59
+    )
     - timedelta(days=1),
     session: Session = Depends(get_session),
 ):
@@ -438,7 +440,9 @@ def create_planned_transaction(
 def get_planned_transactions(
     *,
     start_date: Optional[date] = None,
-    end_date: Optional[date] = date(date.today().year, date.today().month + 1, 1)
+    end_date: Optional[datetime] = datetime(
+        date.today().year, date.today().month + 1, 1, 23, 59, 59
+    )
     - timedelta(days=1),
     session: Session = Depends(get_session),
 ):
@@ -564,7 +568,9 @@ def delete_budget(*, session: Session = Depends(get_session), budget_id: int):
 @app.get("/total_balance/")
 def get_total_balance(
     *,
-    end_date: Optional[date] = date(date.today().year, date.today().month + 1, 1)
+    end_date: Optional[datetime] = datetime(
+        date.today().year, date.today().month + 1, 1, 23, 59, 59
+    )
     - timedelta(days=1),
     session: Session = Depends(get_session),
 ):
@@ -587,7 +593,9 @@ def get_total_balance(
 def get_total_account_balance(
     *,
     account_id: int,
-    end_date: Optional[date] = date(date.today().year, date.today().month + 1, 1)
+    end_date: Optional[datetime] = datetime(
+        date.today().year, date.today().month + 1, 1, 23, 59, 59
+    )
     - timedelta(days=1),
     session: Session = Depends(get_session),
 ):
@@ -612,7 +620,9 @@ def get_total_account_balance(
 @app.get("/total_balance_per_account/")
 def get_total_balance_per_account(
     *,
-    end_date: Optional[date] = date(date.today().year, date.today().month + 1, 1)
+    end_date: Optional[datetime] = datetime(
+        date.today().year, date.today().month + 1, 1, 23, 59, 59
+    )
     - timedelta(days=1),
     session: Session = Depends(get_session),
 ):
@@ -636,6 +646,7 @@ def get_total_balance_per_account(
         account_dict = {
             "id": account.id,
             "name": account.name,
+            "account_type": account.account_type.type,
             "total_balance": total_balance,
             "currency": account.currency.name,
         }
