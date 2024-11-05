@@ -34,6 +34,5 @@ Go to: http://127.0.0.1:8000/docs. You should see something like this:
 
 
 ### TODO:
-
-- [ ] add tests https://sqlmodel.tiangolo.com/tutorial/fastapi/tests/
+- [ ] Dockerize FastAPI + Database
 - [ ] [How to Set Relationship Cascade Options in SQLModel](https://jacob-t-graham.com/2024/05/23/how-to-set-relationship-cascade-options-in-sqlmodel/)

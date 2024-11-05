@@ -13,3 +13,9 @@ python -m streamlit run app.py
 ```
 
 You should see something like this:
+![Streamlit Accounts](../docs/images/streamlit-accounts.png)
+![Streamlit Transactions](../docs/images/streamlit-transactions.png)
+
+### TODO:
+- [ ] Dockerize FastAPI + Database
+- [ ] Add tests
