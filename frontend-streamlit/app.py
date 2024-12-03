@@ -66,7 +66,7 @@ def date_range_filter_section() -> List[date]:
 
 def get_date_range(date_range_filter: List[date]) -> Tuple[str, str]:
     start_date: str = date_range_filter[0].strftime("%Y-%m-%d")
-    end_date: str = date_range_filter[1].strftime("%Y-%m-%d") + "T23:59:59"
+    end_date: str = date_range_filter[1].strftime("%Y-%m-%d") + "T23:59:59.999999"
     return start_date, end_date
 
 
@@ -75,9 +75,11 @@ def fetch_data(start_date: str, end_date: str) -> Dict:
     categories: List[Dict] = requests.get(url=f"{API_URL}/categories/").json()
     subcategories: List[Dict] = requests.get(url=f"{API_URL}/sub_categories/").json()
     accounts_balance: Dict = requests.get(
-        url=f"{API_URL}/total_balance_per_account/"
+        url=f"{API_URL}/total_balance_per_account/?&end_date={end_date}"
     ).json()
-    total_balance: Dict = requests.get(url=f"{API_URL}/total_balance/").json()
+    total_balance: Dict = requests.get(
+        url=f"{API_URL}/total_balance/?&end_date={end_date}"
+    ).json()
     transactions_between_dates: List[Dict] = requests.get(
         url=f"{API_URL}/transactions/?start_date={start_date}&end_date={end_date}"
     ).json()
