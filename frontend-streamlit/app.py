@@ -134,63 +134,70 @@ def render_accounts_tab(data: Dict) -> None:
 
 def render_transactions_tab(data: Dict) -> None:
     st.header("Add a new transaction")
-    with st.form("form_add_transaction", clear_on_submit=True, border=True):
-        transaction_date: datetime = st.date_input(
-            "Transaction Date",
-            value=datetime.now(),
-            format="YYYY-MM-DD",
-            help="Select the date and time of the transaction",
+    container = st.container(border=True)
+    transaction_date: datetime = container.date_input(
+        "Transaction Date",
+        value=datetime.now(),
+        format="YYYY-MM-DD",
+        help="Select the date and time of the transaction",
+    )
+    account_name: str = container.selectbox(
+        "Account",
+        options=[account["name"] for account in data["accounts"]],
+        help="Select the account where the transaction belongs",
+    )
+    amount: float = container.number_input(
+        "Amount",
+        help="Add the amount of the transaction. Currency depends on the selected account",
+    )
+    category: str = container.selectbox(
+        "Category",
+        options=[category["name"] for category in data["categories"]],
+        help="Select the category of the transaction",
+    )
+
+    subcategory: str = container.selectbox(
+        "Subcategory",
+        options=[
+            subcategory["name"]
+            for subcategory in data["subcategories"]
+            if subcategory["category"]["name"] == category
+        ],
+        help="Select the subcategory of the transaction",
+    )
+    description: str = container.text_input(
+        "Description", help="Optional - Add a description to the transaction"
+    )
+
+    if container.button("Add transaction"):
+        new_category: str = category
+        new_subcategory: str = subcategory
+        account_id: int = next(
+            account["id"]
+            for account in data["accounts"]
+            if account_name == account["name"]
         )
-        account_name: str = st.selectbox(
-            "Account",
-            options=[account["name"] for account in data["accounts"]],
-            help="Select the account where the transaction belongs",
+        category_id: int = next(
+            category["id"]
+            for category in data["categories"]
+            if new_category == category["name"]
         )
-        amount: float = st.number_input(
-            "Amount",
-            help="Add the amount of the transaction. Currency depends on the selected account",
-        )
-        category: str = st.selectbox(
-            "Category",
-            options=[
-                f"{subcategory['category']['name']} - {subcategory['name']}"
-                for subcategory in data["subcategories"]
-            ],
-            help="Select the category and subcategory of the transaction",
-        )
-        description: str = st.text_input(
-            "Description", help="Optional - Add a description to the transaction"
+        subcategory_id: int = next(
+            subcategory["id"]
+            for subcategory in data["subcategories"]
+            if new_subcategory == subcategory["name"]
         )
 
-        if st.form_submit_button("Add transaction"):
-            new_category: str = category.split(" - ")[0]
-            new_subcategory: str = category.split(" - ")[1]
-            account_id: int = next(
-                account["id"]
-                for account in data["accounts"]
-                if account_name == account["name"]
-            )
-            category_id: int = next(
-                category["id"]
-                for category in data["categories"]
-                if new_category == category["name"]
-            )
-            subcategory_id: int = next(
-                subcategory["id"]
-                for subcategory in data["subcategories"]
-                if new_subcategory == subcategory["name"]
-            )
-
-            payload: Dict = {
-                "transaction_date": transaction_date.strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "account_id": account_id,
-                "amount": amount,
-                "category_id": category_id,
-                "subcategory_id": subcategory_id,
-                "description": description,
-            }
-            requests.post(url=f"{API_URL}/transactions/", json=payload)
-            st.rerun()
+        payload: Dict = {
+            "transaction_date": transaction_date.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "account_id": account_id,
+            "amount": amount,
+            "category_id": category_id,
+            "subcategory_id": subcategory_id,
+            "description": description,
+        }
+        requests.post(url=f"{API_URL}/transactions/", json=payload)
+        st.rerun()
 
     st.header("Transactions")
     quantity_transactions: int = len(data["transactions_between_dates"])
