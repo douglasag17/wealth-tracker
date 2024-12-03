@@ -1,5 +1,6 @@
+import calendar
 from contextlib import asynccontextmanager
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -361,9 +362,14 @@ def get_transactions(
     *,
     start_date: Optional[date] = None,
     end_date: Optional[datetime] = datetime(
-        date.today().year, date.today().month + 1, 1, 23, 59, 59
-    )
-    - timedelta(days=1),
+        datetime.now().year,
+        datetime.now().month,
+        calendar.monthrange(datetime.now().year, datetime.now().month)[1],
+        23,
+        59,
+        59,
+        999999,
+    ),
     session: Session = Depends(get_session),
 ):
     if start_date:
@@ -441,9 +447,14 @@ def get_planned_transactions(
     *,
     start_date: Optional[date] = None,
     end_date: Optional[datetime] = datetime(
-        date.today().year, date.today().month + 1, 1, 23, 59, 59
-    )
-    - timedelta(days=1),
+        datetime.now().year,
+        datetime.now().month,
+        calendar.monthrange(datetime.now().year, datetime.now().month)[1],
+        23,
+        59,
+        59,
+        999999,
+    ),
     session: Session = Depends(get_session),
 ):
     if start_date:
@@ -569,9 +580,14 @@ def delete_budget(*, session: Session = Depends(get_session), budget_id: int):
 def get_total_balance(
     *,
     end_date: Optional[datetime] = datetime(
-        date.today().year, date.today().month + 1, 1, 23, 59, 59
-    )
-    - timedelta(days=1),
+        datetime.now().year,
+        datetime.now().month,
+        calendar.monthrange(datetime.now().year, datetime.now().month)[1],
+        23,
+        59,
+        59,
+        999999,
+    ),
     session: Session = Depends(get_session),
 ):
     transactions: List[Transaction] = session.exec(
@@ -594,9 +610,14 @@ def get_total_account_balance(
     *,
     account_id: int,
     end_date: Optional[datetime] = datetime(
-        date.today().year, date.today().month + 1, 1, 23, 59, 59
-    )
-    - timedelta(days=1),
+        datetime.now().year,
+        datetime.now().month,
+        calendar.monthrange(datetime.now().year, datetime.now().month)[1],
+        23,
+        59,
+        59,
+        999999,
+    ),
     session: Session = Depends(get_session),
 ):
     transactions: List[Transaction] = session.exec(
@@ -621,9 +642,14 @@ def get_total_account_balance(
 def get_total_balance_per_account(
     *,
     end_date: Optional[datetime] = datetime(
-        date.today().year, date.today().month + 1, 1, 23, 59, 59
-    )
-    - timedelta(days=1),
+        datetime.now().year,
+        datetime.now().month,
+        calendar.monthrange(datetime.now().year, datetime.now().month)[1],
+        23,
+        59,
+        59,
+        999999,
+    ),
     session: Session = Depends(get_session),
 ):
     accounts: List[Account] = session.exec(select(Account)).all()
