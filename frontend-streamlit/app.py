@@ -1,4 +1,5 @@
-from datetime import date, datetime, timedelta
+import calendar
+from datetime import date, datetime
 from typing import Dict, List, Tuple
 
 import requests
@@ -49,9 +50,11 @@ def date_range_filter_section() -> List[date]:
     st.header("Select a date range")
     current_date: date = date.today()
     first_day_of_current_month: date = date(current_date.year, current_date.month, 1)
-    last_day_of_current_month: date = date(
-        current_date.year, current_date.month + 1, 1
-    ) - timedelta(days=1)
+    last_day_of_current_month: date = (
+        datetime.now().replace(
+            day=calendar.monthrange(datetime.now().year, datetime.now().month)[1]
+        )
+    ).date()
     st.date_input(
         "Select a date range",
         value=(first_day_of_current_month, last_day_of_current_month),
