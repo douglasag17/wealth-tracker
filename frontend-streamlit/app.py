@@ -66,6 +66,9 @@ def date_range_filter_section() -> List[date]:
 
 def get_date_range(date_range_filter: List[date]) -> Tuple[str, str]:
     start_date: str = date_range_filter[0].strftime("%Y-%m-%d")
+    if len(date_range_filter) == 1:
+        st.warning("Select an end date to visualize the data")
+        st.stop()
     end_date: str = date_range_filter[1].strftime("%Y-%m-%d") + "T23:59:59.999999"
     return start_date, end_date
 
