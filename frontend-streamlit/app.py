@@ -210,6 +210,7 @@ def render_transaction_tile(data: Dict, i: int, col) -> None:
     tile.write(
         f"This should be the Subcategory: {data['transactions_between_dates'][i]['subcategory']['name']}"
     )
+
     transaction_date: datetime = tile.date_input(
         "Transaction Date",
         value=datetime.strptime(
@@ -257,6 +258,18 @@ def render_transaction_tile(data: Dict, i: int, col) -> None:
             for subcategory in data["subcategories"]
             if subcategory["category"]["name"] == category
         ],
+        index=next(
+            index
+            for index, subcategory in enumerate(
+                [
+                    subcategory
+                    for subcategory in data["subcategories"]
+                    if subcategory["category"]["name"] == category
+                ]
+            )
+            if subcategory["name"]
+            == data["transactions_between_dates"][i]["subcategory"]["name"]
+        ),
         help="Select the subcategory of the transaction",
         key=f"subcategory_{i}",
     )
