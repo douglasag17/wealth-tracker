@@ -207,10 +207,6 @@ def render_add_transaction_section(data: Dict) -> None:
 
 def render_transaction_tile(data: Dict, i: int, col) -> None:
     tile = col.container(border=True)
-    tile.write(
-        f"This should be the Subcategory: {data['transactions_between_dates'][i]['subcategory']['name']}"
-    )
-
     transaction_date: datetime = tile.date_input(
         "Transaction Date",
         value=datetime.strptime(
