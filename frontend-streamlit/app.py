@@ -22,18 +22,22 @@ def delete_account(account: Dict) -> None:
         st.rerun()
 
 
-@st.dialog("Update transaction")
-def update_transaction(transaction: Dict) -> None:
-    st.write(f"Transaction: {transaction}")
-    st.rerun()
-
-
 @st.dialog("Delete transaction")
 def delete_transaction(transaction: Dict) -> None:
     st.write(f'Do you want to delete the "{transaction["id"]}" transaction?')
     if st.button("Delete"):
         requests.delete(url=f"{API_URL}/transactions/{transaction['id']}/")
         st.rerun()
+
+
+@st.dialog("Update transaction")
+def update_transaction(original_transaction: Dict, updated_transaction: Dict) -> None:
+    st.write(f"Original Transaction: {original_transaction}")
+    st.write(f"Updated Transaction: {updated_transaction}")
+    # requests.patch(
+    #     url=f"{API_URL}/transactions/{transaction['id']}/",
+    # )
+    # st.rerun()
 
 
 def setup_page() -> None:
@@ -177,28 +181,24 @@ def render_transactions_tab(data: Dict) -> None:
     if container.button("Add transaction"):
         new_category: str = category
         new_subcategory: str = subcategory
-        account_id: int = next(
-            account["id"]
-            for account in data["accounts"]
-            if account_name == account["name"]
-        )
-        category_id: int = next(
-            category["id"]
-            for category in data["categories"]
-            if new_category == category["name"]
-        )
-        subcategory_id: int = next(
-            subcategory["id"]
-            for subcategory in data["subcategories"]
-            if new_subcategory == subcategory["name"]
-        )
-
         payload: Dict = {
             "transaction_date": transaction_date.strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "account_id": account_id,
+            "account_id": next(
+                account["id"]
+                for account in data["accounts"]
+                if account_name == account["name"]
+            ),
             "amount": amount,
-            "category_id": category_id,
-            "subcategory_id": subcategory_id,
+            "category_id": next(
+                category["id"]
+                for category in data["categories"]
+                if new_category == category["name"]
+            ),
+            "subcategory_id": next(
+                subcategory["id"]
+                for subcategory in data["subcategories"]
+                if new_subcategory == subcategory["name"]
+            ),
             "description": description,
         }
         requests.post(url=f"{API_URL}/transactions/", json=payload)
@@ -210,24 +210,98 @@ def render_transactions_tab(data: Dict) -> None:
     for i, col in enumerate(row * quantity_transactions):
         tile = col.container(border=True)
         tile.write(
-            f"Account: {data['transactions_between_dates'][i]['account']['name']}"
+            f"This should be the Subcategory: {data['transactions_between_dates'][i]['subcategory']['name']}"
         )
-        tile.write(f"Date: {data['transactions_between_dates'][i]['transaction_date']}")
-        tile.write(f"Amount: {data['transactions_between_dates'][i]['amount']}")
-        tile.write(
-            f"Category: {data['transactions_between_dates'][i]['category']['name']}"
+        transaction_date: datetime = tile.date_input(
+            "Transaction Date",
+            value=datetime.strptime(
+                data["transactions_between_dates"][i]["transaction_date"],
+                "%Y-%m-%dT%H:%M:%S",
+            ),
+            format="YYYY-MM-DD",
+            help="Select the date and time of the transaction",
+            key=f"transaction_date_{i}",
         )
-        tile.write(
-            f"Subcategory: {data['transactions_between_dates'][i]['subcategory']['name']}"
+        account_name: str = tile.selectbox(
+            "Account",
+            options=[account["name"] for account in data["accounts"]],
+            index=next(
+                index
+                for index, account in enumerate(data["accounts"])
+                if account["name"]
+                == data["transactions_between_dates"][i]["account"]["name"]
+            ),
+            help="Select the account where the transaction belongs",
+            key=f"account_name_{i}",
         )
-        tile.write(
-            f"Description: {data['transactions_between_dates'][i]['description']}"
+        amount: float = tile.number_input(
+            "Amount",
+            value=float(data["transactions_between_dates"][i]["amount"]),
+            help="Add the amount of the transaction. Currency depends on the selected account",
+            key=f"amount_{i}",
+        )
+        category: str = tile.selectbox(
+            "Category",
+            options=[category["name"] for category in data["categories"]],
+            index=next(
+                index
+                for index, category in enumerate(data["categories"])
+                if category["name"]
+                == data["transactions_between_dates"][i]["category"]["name"]
+            ),
+            help="Select the category of the transaction",
+            key=f"category_{i}",
+        )
+        subcategory: str = tile.selectbox(
+            "Subcategory",
+            options=[
+                subcategory["name"]
+                for subcategory in data["subcategories"]
+                if subcategory["category"]["name"] == category
+            ],
+            # FIXME: This is not working as expected
+            # index=next(
+            #     index
+            #     for index, subcategory in enumerate(data["subcategories"])
+            #     if subcategory["name"] == data["transactions_between_dates"][i]["subcategory"]["name"]
+            # ),
+            help="Select the subcategory of the transaction",
+            key=f"subcategory_{i}",
+        )
+        description: str = tile.text_input(
+            "Description",
+            value=data["transactions_between_dates"][i]["description"],
+            help="Optional - Add a description to the transaction",
+            key=f"description_{i}",
         )
 
         left, right = tile.columns(2)
         with left:
-            if left.button(label="Edit", key=f"edit_transaction{i}"):
-                update_transaction(data["transactions_between_dates"][i])
+            if left.button(label="Update", key=f"edit_transaction{i}"):
+                original_transaction: Dict = data["transactions_between_dates"][i]
+                updated_transaction: Dict = {
+                    "transaction_date": transaction_date.strftime(
+                        "%Y-%m-%dT%H:%M:%S.%f"
+                    ),
+                    "account_id": next(
+                        account["id"]
+                        for account in data["accounts"]
+                        if account_name == account["name"]
+                    ),
+                    "amount": amount,
+                    "category_id": next(
+                        cat["id"]
+                        for cat in data["categories"]
+                        if cat["name"] == category
+                    ),
+                    "subcategory_id": next(
+                        subcat["id"]
+                        for subcat in data["subcategories"]
+                        if subcat["name"] == subcategory
+                    ),
+                    "description": description,
+                }
+                update_transaction(original_transaction, updated_transaction)
         with right:
             if right.button(label="Delete", key=f"delete_transaction{i}"):
                 delete_transaction(data["transactions_between_dates"][i])
