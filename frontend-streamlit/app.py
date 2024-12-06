@@ -8,15 +8,9 @@ import streamlit as st
 API_URL: str = "http://localhost:8000"
 
 
-@st.dialog("Update account")
-def update_account(account: Dict) -> None:
-    st.write(f"Account: {account}")
-    st.rerun()
-
-
 @st.dialog("Delete account")
 def delete_account(account: Dict) -> None:
-    st.write(f'Do you want to delete the "{account["name"]}" account?')
+    st.write("Do you want to delete this account?")
     if st.button("Delete"):
         requests.delete(url=f"{API_URL}/accounts/{account['id']}/")
         st.rerun()
@@ -24,20 +18,10 @@ def delete_account(account: Dict) -> None:
 
 @st.dialog("Delete transaction")
 def delete_transaction(transaction: Dict) -> None:
-    st.write(f'Do you want to delete the "{transaction["id"]}" transaction?')
+    st.write("Do you want to delete this transaction?")
     if st.button("Delete"):
         requests.delete(url=f"{API_URL}/transactions/{transaction['id']}/")
         st.rerun()
-
-
-@st.dialog("Update transaction")
-def update_transaction(original_transaction: Dict, updated_transaction: Dict) -> None:
-    st.write(f"Original Transaction: {original_transaction}")
-    st.write(f"Updated Transaction: {updated_transaction}")
-    # requests.patch(
-    #     url=f"{API_URL}/transactions/{transaction['id']}/",
-    # )
-    # st.rerun()
 
 
 def setup_page() -> None:
@@ -78,6 +62,8 @@ def get_date_range(date_range_filter: List[date]) -> Tuple[str, str]:
 
 
 def fetch_data(start_date: str, end_date: str) -> Dict:
+    currencies: List[Dict] = requests.get(url=f"{API_URL}/currencies/").json()
+    account_types: List[Dict] = requests.get(url=f"{API_URL}/account_types/").json()
     accounts: List[Dict] = requests.get(url=f"{API_URL}/accounts/").json()
     categories: List[Dict] = requests.get(url=f"{API_URL}/categories/").json()
     subcategories: List[Dict] = requests.get(url=f"{API_URL}/sub_categories/").json()
@@ -91,6 +77,8 @@ def fetch_data(start_date: str, end_date: str) -> Dict:
         url=f"{API_URL}/transactions/?start_date={start_date}&end_date={end_date}"
     ).json()
     return {
+        "currencies": currencies,
+        "account_types": account_types,
         "accounts": accounts,
         "categories": categories,
         "subcategories": subcategories,
@@ -133,12 +121,42 @@ def render_accounts_tab(data: Dict) -> None:
         left, right = tile.columns(2)
         with left:
             if left.button(label="Edit", key=f"edit_account_{i}"):
-                update_account(data["accounts_balance"][i])
+                pass
         with right:
             if right.button(label="Delete", key=f"delete_account_{i}"):
                 delete_account(data["accounts_balance"][i])
 
     st.header("Add a new account")
+    container = st.container(border=True)
+    account_name: str = container.text_input(
+        "Account Name", help="Add the name of the account"
+    )
+    account_type: str = container.selectbox(
+        "Account Type",
+        options=[account_type["type"] for account_type in data["account_types"]],
+        help="Select the type of the account",
+    )
+    currency: str = container.selectbox(
+        "Currency",
+        options=[currency["name"] for currency in data["currencies"]],
+        help="Select the currency of the account",
+    )
+
+    if container.button("Add account"):
+        payload: Dict = {
+            "name": account_name,
+            "account_type_id": next(
+                acc_type["id"]
+                for acc_type in data["account_types"]
+                if acc_type["type"] == account_type
+            ),
+            "currency_id": next(
+                curr["id"] for curr in data["currencies"] if curr["name"] == currency
+            ),
+        }
+        st.write(payload)
+        requests.post(url=f"{API_URL}/accounts/", json=payload)
+        st.rerun()
 
 
 def render_add_transaction_section(data: Dict) -> None:
@@ -164,7 +182,6 @@ def render_add_transaction_section(data: Dict) -> None:
         options=[category["name"] for category in data["categories"]],
         help="Select the category of the transaction",
     )
-
     subcategory: str = container.selectbox(
         "Subcategory",
         options=[
@@ -298,7 +315,11 @@ def render_transaction_tile(data: Dict, i: int, col) -> None:
                 ),
                 "description": description,
             }
-            update_transaction(original_transaction, updated_transaction)
+            requests.patch(
+                url=f"{API_URL}/transactions/{original_transaction['id']}/",
+                json=updated_transaction,
+            )
+            st.rerun()
     with right:
         if right.button(label="Delete", key=f"delete_transaction{i}"):
             delete_transaction(data["transactions_between_dates"][i])
