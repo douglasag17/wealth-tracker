@@ -8,6 +8,12 @@ import streamlit as st
 API_URL: str = "http://localhost:8000"
 
 
+@st.dialog("Update account")
+def update_account(original_account: Dict) -> None:
+    # TODO: Implement this function
+    pass
+
+
 @st.dialog("Delete account")
 def delete_account(account: Dict) -> None:
     st.write("Do you want to delete this account?")
@@ -121,7 +127,8 @@ def render_accounts_tab(data: Dict) -> None:
         left, right = tile.columns(2)
         with left:
             if left.button(label="Edit", key=f"edit_account_{i}"):
-                pass
+                update_account(data["accounts_balance"][i])
+
         with right:
             if right.button(label="Delete", key=f"delete_account_{i}"):
                 delete_account(data["accounts_balance"][i])
